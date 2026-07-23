@@ -10,6 +10,8 @@ import { AnimationClip, StandingPoseConfig, PosePreset } from '../types/animatio
 import { DEFAULT_CLIPS, DEFAULT_STANDING_POSE, POSE_PRESETS } from '../data/defaultAnimations';
 import { getMirroredBone, getInterpolatedBoneRotation } from '../utils/humanPhysics';
 import { BONE_LABELS } from './lab/LabModel';
+import { SceneSettingsPanel } from './SceneSettingsPanel';
+import { MatrixBackground } from './MatrixBackground';
 import {
   ArrowLeft,
   Eye,
@@ -1087,6 +1089,7 @@ export function AnimationLab({
         <div className="flex-1 relative bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
           <Canvas camera={{ position: [0, 1.8, 3.2], fov: 45 }}>
             <color attach="background" args={['#0f172a']} />
+            <MatrixBackground />
             <ambientLight intensity={0.9} />
             <directionalLight position={[10, 15, 5]} intensity={1.8} castShadow />
             <directionalLight position={[-10, 5, -5]} intensity={0.6} color="#3b82f6" />

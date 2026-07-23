@@ -16,6 +16,7 @@ import { AnimationLibrary } from './components/AnimationLibrary';
 import { StreetLightPole } from './components/StreetLightPole';
 import { Laptop } from './components/Laptop';
 import { BackgroundMusic } from './components/BackgroundMusic';
+import { MatrixBackground } from './components/MatrixBackground';
 import { UbuntuDesktop } from './components/UbuntuDesktop';
 import { Wand2 } from 'lucide-react';
 import { SceneSettingsPanel } from './components/SceneSettingsPanel';
@@ -581,8 +582,9 @@ export default function App() {
         >
           <Canvas camera={{ position: [0, 1.45, 1.6], fov: sceneConfig.cameraFov }} shadows>
           <color attach="background" args={[sceneConfig.backgroundColor]} />
-          {/* Night Sky Background Stars */}
+          {/* Night Sky Background Stars & Matrix Rain */}
           <Stars radius={100} depth={50} count={sceneConfig.starCount} factor={4} saturation={0} fade speed={sceneConfig.starSpeed} />
+          <MatrixBackground />
 
           {/* Balanced Night Ambient Light */}
           <ambientLight intensity={sceneConfig.ambientLightIntensity} color={sceneConfig.ambientLightColor} />
