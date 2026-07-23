@@ -241,6 +241,77 @@ export function SceneSettingsPanel({ config, onChange, onClose }: SceneSettingsP
             </div>
           </div>
         </section>
+
+        {/* Post Processing */}
+        <section className="space-y-4">
+          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+            <Sparkles size={12} /> Post-Processing (CSS)
+          </h3>
+
+          <div className="space-y-1">
+            <div className="flex justify-between text-[11px]">
+              <span>Color Saturation</span>
+              <span className="font-mono text-emerald-400">{config.saturation.toFixed(2)}</span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="2.5"
+              step="0.05"
+              value={config.saturation}
+              onChange={(e) => updateField('saturation', parseFloat(e.target.value))}
+              className="w-full accent-emerald-500"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <div className="flex justify-between text-[11px]">
+              <span>Brightness</span>
+              <span className="font-mono text-emerald-400">{config.brightness.toFixed(2)}</span>
+            </div>
+            <input
+              type="range"
+              min="0.2"
+              max="2.0"
+              step="0.05"
+              value={config.brightness}
+              onChange={(e) => updateField('brightness', parseFloat(e.target.value))}
+              className="w-full accent-emerald-500"
+            />
+          </div>
+          
+          <div className="space-y-1">
+            <div className="flex justify-between text-[11px]">
+              <span>Contrast</span>
+              <span className="font-mono text-emerald-400">{config.contrast.toFixed(2)}</span>
+            </div>
+            <input
+              type="range"
+              min="0.5"
+              max="2.0"
+              step="0.05"
+              value={config.contrast}
+              onChange={(e) => updateField('contrast', parseFloat(e.target.value))}
+              className="w-full accent-emerald-500"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <div className="flex justify-between text-[11px]">
+              <span>Film Grain</span>
+              <span className="font-mono text-emerald-400">{config.filmGrain.toFixed(2)}</span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.05"
+              value={config.filmGrain}
+              onChange={(e) => updateField('filmGrain', parseFloat(e.target.value))}
+              className="w-full accent-emerald-500"
+            />
+          </div>
+        </section>
       </div>
     </div>
   );

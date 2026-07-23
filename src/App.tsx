@@ -542,7 +542,13 @@ export default function App() {
           )}
         </div>
 
-        <Canvas camera={{ position: [0, 1.45, 1.6], fov: sceneConfig.cameraFov }} shadows>
+        <div 
+          className="absolute inset-0 z-0 transition-all duration-300 pointer-events-auto"
+          style={{
+            filter: `brightness(${sceneConfig.brightness}) contrast(${sceneConfig.contrast}) saturate(${sceneConfig.saturation})`
+          }}
+        >
+          <Canvas camera={{ position: [0, 1.45, 1.6], fov: sceneConfig.cameraFov }} shadows>
           <color attach="background" args={[sceneConfig.backgroundColor]} />
           {/* Night Sky Background Stars */}
           <Stars radius={100} depth={50} count={sceneConfig.starCount} factor={4} saturation={0} fade speed={sceneConfig.starSpeed} />
@@ -642,10 +648,14 @@ export default function App() {
             fadeStrength={1}
             infiniteGrid
           />
-        </Canvas>
+          </Canvas>
+        </div>
 
         {/* Ultra-Intense Cinematic Film Grain & Vignette Overlay (Permanent Default) */}
-        <div className="absolute inset-0 pointer-events-none z-[15] opacity-[0.28] film-grain-overlay mix-blend-overlay" />
+        <div 
+          className="absolute inset-0 pointer-events-none z-[15] film-grain-overlay mix-blend-overlay transition-opacity duration-300" 
+          style={{ opacity: sceneConfig.filmGrain }}
+        />
         <div className="absolute inset-0 pointer-events-none z-[14] film-vignette" />
 
         {/* Camera Height & Permanent Save View Options Popover Panel */}

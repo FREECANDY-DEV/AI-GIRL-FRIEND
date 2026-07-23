@@ -13,6 +13,10 @@ export interface SceneConfig {
   autoRotateSpeed: number;
   starCount: number;
   starSpeed: number;
+  saturation: number;
+  brightness: number;
+  contrast: number;
+  filmGrain: number;
 }
 
 export const DEFAULT_SCENE_CONFIG: SceneConfig = {
@@ -30,4 +34,8 @@ export const DEFAULT_SCENE_CONFIG: SceneConfig = {
   autoRotateSpeed: 1.0,
   starCount: 6000,
   starSpeed: 1.5,
+  saturation: 1.0,
+  brightness: 1.0,
+  contrast: 1.0,
+  filmGrain: 0.3,
 };
