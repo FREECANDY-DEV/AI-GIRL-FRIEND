@@ -40,7 +40,7 @@ export default function App() {
   const [isCamControlsOpen, setIsCamControlsOpen] = useState(false);
 
   // Camera Height & Permanent Save State
-  const [camHeight, setCamHeight] = useState<number>(1.50);
+  const [camHeight, setCamHeight] = useState<number>(1.65);
   const [saveToast, setSaveToast] = useState<string | null>(null);
 
   // Dynamic Touch Screen Detection (Joystick appears only when touching screen)
@@ -299,7 +299,7 @@ export default function App() {
     setResetTrigger((prev) => prev + 1);
 
     // 3. Reset the camera height slider to default
-    setCamHeight(1.50);
+    setCamHeight(1.65);
     
     setSaveToast('Model & View Reset to Front Face View!');
     setTimeout(() => setSaveToast(null), 3000);

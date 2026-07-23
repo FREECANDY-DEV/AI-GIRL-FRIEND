@@ -43,7 +43,7 @@ export function Player({
   onZoomChange,
   hideHeadSpeech,
   resetTrigger,
-  camHeight = 1.5,
+  camHeight = 1.65,
 }: PlayerProps) {
   const { camera, scene: globalScene } = useThree();
   const group = useRef<THREE.Group>(null);
