@@ -1,5 +1,6 @@
 import { X, Terminal, Folder, Chrome, LayoutGrid, Unlock, User } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { resolvePath, getNodeAtPath } from '../utils/mockFileSystem';
 
 interface UbuntuDesktopProps {
   onClose: () => void;
@@ -95,9 +96,6 @@ export function UbuntuDesktop({ onClose }: UbuntuDesktopProps) {
 
     const args = cmd.split(' ').filter(Boolean);
     const command = args[0].toLowerCase();
-
-    // Import filesystem dynamically to avoid circular issues
-    const { resolvePath, getNodeAtPath } = await import('../utils/mockFileSystem');
 
     setTimeout(() => {
       let output = '';
