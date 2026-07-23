@@ -9,6 +9,9 @@ import { StandingPoseConfig, AnimationClip } from '../types/animation';
 import { solveTwoBoneIK, resolveLimbWrappingCollisions } from '../utils/humanPhysics';
 import { History } from 'lucide-react';
 
+// Global reference for other components to track the player's 3D world position
+export const playerWorldPosition = new THREE.Vector3();
+
 interface PlayerProps {
   joystickMove: { x: number; y: number };
   showSkeleton?: boolean;
@@ -223,6 +226,9 @@ export function Player({
 
   useFrame((state, delta) => {
     if (!group.current || !rigidBody.current) return;
+
+    // Update the global player position tracker for proximity sensors
+    playerWorldPosition.copy(rigidBody.current.translation());
 
     // Emergency out-of-bounds fall protection: only reset position if character falls deep off map (y < -1.5)
     const currentTranslation = rigidBody.current.translation();

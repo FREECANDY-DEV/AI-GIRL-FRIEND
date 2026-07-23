@@ -16,6 +16,7 @@ import { AnimationLibrary } from './components/AnimationLibrary';
 import { StreetLightPole } from './components/StreetLightPole';
 import { Laptop } from './components/Laptop';
 import { BackgroundMusic } from './components/BackgroundMusic';
+import { UbuntuDesktop } from './components/UbuntuDesktop';
 import { Wand2 } from 'lucide-react';
 import { SceneSettingsPanel } from './components/SceneSettingsPanel';
 import { StandingPoseConfig, AnimationClip, PosePreset } from './types/animation';
@@ -31,6 +32,7 @@ export default function App() {
   const [isDragBodyMode, setIsDragBodyMode] = useState(false);
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [isDesktopOpen, setIsDesktopOpen] = useState(false);
   const [isFreeCamera, setIsFreeCamera] = useState(true);
   const [isCameraZoomedClose, setIsCameraZoomedClose] = useState(false);
   const [resetTrigger, setResetTrigger] = useState(0);
@@ -622,7 +624,7 @@ export default function App() {
               </RigidBody>
 
               {/* Laptop placed to fall dynamically onto the cube */}
-              <Laptop position={[3, 3.0, 3]} />
+              <Laptop position={[3, 3.0, 3]} onOpenDesktop={() => setIsDesktopOpen(true)} />
 
               <RigidBody type="fixed">
                 <mesh position={[-3, 0.5, -2]} castShadow={sceneConfig.castShadows} receiveShadow={sceneConfig.castShadows}>
@@ -863,6 +865,11 @@ export default function App() {
           onChange={setSceneConfig}
           onClose={() => setIsSceneSettingsOpen(false)}
         />
+      )}
+
+      {/* Full Screen Ubuntu Desktop Overlay */}
+      {isDesktopOpen && (
+        <UbuntuDesktop onClose={() => setIsDesktopOpen(false)} />
       )}
     </div>
   );
