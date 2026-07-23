@@ -630,6 +630,7 @@ export default function App() {
                 onZoomChange={setIsCameraZoomedClose}
                 hideHeadSpeech={true}
                 resetTrigger={resetTrigger}
+                camHeight={camHeight}
               />
 
               {/* Soft Dynamic Contact Shadow under character feet */}

@@ -26,6 +26,7 @@ interface PlayerProps {
   onZoomChange?: (isZoomedClose: boolean) => void;
   hideHeadSpeech?: boolean;
   resetTrigger?: number;
+  camHeight?: number;
 }
 
 export function Player({
@@ -42,6 +43,7 @@ export function Player({
   onZoomChange,
   hideHeadSpeech,
   resetTrigger,
+  camHeight = 1.5,
 }: PlayerProps) {
   const { camera, scene: globalScene } = useThree();
   const group = useRef<THREE.Group>(null);
@@ -1069,8 +1071,8 @@ export function Player({
       if (isFreeCamera && !hasInitFreeCamRef.current) {
         hasInitOtsCamRef.current = false;
         // Smoothly position camera directly in front of model face at eye level
-        const targetPos = new THREE.Vector3(0, 1.50, 1.6);
-        const targetLookAt = new THREE.Vector3(0, 1.50, 0);
+        const targetPos = new THREE.Vector3(0, camHeight, 1.6);
+        const targetLookAt = new THREE.Vector3(0, camHeight, 0);
         
         camera.position.lerp(targetPos, Math.min(1, 1.5 * delta));
         orbitControlsRef.current.target.lerp(targetLookAt, Math.min(1, 1.5 * delta));
@@ -1088,7 +1090,7 @@ export function Player({
           const radius = 2.5;
           const camX = playerWorldPos.x + Math.sin(charYaw + Math.PI) * radius;
           const camZ = playerWorldPos.z + Math.cos(charYaw + Math.PI) * radius;
-          const targetCamPos = new THREE.Vector3(camX, playerWorldPos.y + 1.50, camZ);
+          const targetCamPos = new THREE.Vector3(camX, playerWorldPos.y + camHeight, camZ);
           
           camera.position.lerp(targetCamPos, Math.min(1, 1.5 * delta));
           
@@ -1107,7 +1109,7 @@ export function Player({
         // This puts the character on the left side of the screen (Over The Right Shoulder)
         const lookAtTarget = playerWorldPos
           .clone()
-          .add(new THREE.Vector3(0, 1.50 + shakeY, 0))
+          .add(new THREE.Vector3(0, camHeight + shakeY, 0))
           .add(camRight.multiplyScalar(0.4 + shakeX));
 
         if (!hasInitOtsCamRef.current) {
