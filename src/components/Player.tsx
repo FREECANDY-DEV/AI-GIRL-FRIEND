@@ -118,6 +118,16 @@ export function Player({
   const { rapier, world } = useRapier();
   const braceWeightsRef = useRef({ left: 0, right: 0 });
 
+  // Footprints system
+  const footprintsGroupRef = useRef<THREE.Group>(null);
+  const lastStepDistRef = useRef(0);
+  const stepSideRef = useRef(false);
+  const footprintGeo = useMemo(() => {
+    const geo = new THREE.CircleGeometry(0.12, 16);
+    geo.scale(1, 1.8, 1);
+    return geo;
+  }, []);
+
   const applyBraceIK = (bName: string, deltaQ: THREE.Quaternion) => {
     const lw = braceWeightsRef.current.left;
     const rw = braceWeightsRef.current.right;
@@ -417,6 +427,39 @@ export function Player({
           true
         );
 
+        // Spawn footprints
+        lastStepDistRef.current += speed * delta;
+        if (lastStepDistRef.current > 0.8) {
+          lastStepDistRef.current = 0;
+          stepSideRef.current = !stepSideRef.current;
+
+          if (footprintsGroupRef.current) {
+            const sideOffset = stepSideRef.current ? 0.18 : -0.18;
+            const offsetX = Math.cos(bodyAngle) * sideOffset;
+            const offsetZ = -Math.sin(bodyAngle) * sideOffset;
+            
+            const pos = new THREE.Vector3(originPos.x, originPos.y, originPos.z);
+            pos.x += offsetX;
+            pos.z += offsetZ;
+            pos.y = 0.02; // Slightly above ground to prevent Z-fighting
+
+            const mesh = new THREE.Mesh(
+              footprintGeo,
+              new THREE.MeshBasicMaterial({ 
+                color: new THREE.Color('#06b6d4'),
+                transparent: true, 
+                opacity: 0.6, 
+                depthWrite: false,
+                blending: THREE.AdditiveBlending
+              })
+            );
+            mesh.rotation.x = -Math.PI / 2;
+            mesh.rotation.z = -bodyAngle;
+            mesh.position.copy(pos);
+            footprintsGroupRef.current.add(mesh);
+          }
+        }
+
         // Keyboard movement directly controls hips & legs rotation
         const targetRotation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), targetBodyAngle);
         group.current.quaternion.slerp(targetRotation, 14 * delta);
@@ -573,6 +616,19 @@ export function Player({
         },
         true
       );
+    }
+
+    // Process Footprints Fading
+    if (footprintsGroupRef.current) {
+      for (let i = footprintsGroupRef.current.children.length - 1; i >= 0; i--) {
+        const mesh = footprintsGroupRef.current.children[i] as THREE.Mesh;
+        const mat = mesh.material as THREE.MeshBasicMaterial;
+        mat.opacity -= delta * 0.25; // Fade out over ~4 seconds
+        if (mat.opacity <= 0) {
+          footprintsGroupRef.current.remove(mesh);
+          mat.dispose();
+        }
+      }
     }
 
     // Calculate camera target angle and relative difference to character body
@@ -1114,6 +1170,10 @@ export function Player({
       friction={0.2}
     >
       <CapsuleCollider args={[0.5, 0.3]} position={[0, 0.8, 0]} />
+
+      {/* Footprints Group - Placed at world origin, not affected by character rotation */}
+      <group ref={footprintsGroupRef} position={[0, -0.85, 0]} />
+
       <group
         ref={group}
         dispose={null}
