@@ -79,6 +79,7 @@ export function Player({
   const isHeadCorrectingRef = useRef(false);
   const hasInitFreeCamRef = useRef(false);
   const isZoomedCloseRef = useRef(false);
+  const turnAnticipationRef = useRef({ isTurning: false, targetAngle: 0 });
 
   const ttsWordRef = useRef('');
   const ttsBoundaryTimeRef = useRef(0);
@@ -282,25 +283,57 @@ export function Player({
     if (isMoving) {
       moveVector.normalize();
       const speed = 4.2;
-
-      // Apply physical velocity
-      rigidBody.current.setLinvel(
-        {
-          x: moveVector.x * speed,
-          y: rigidBody.current.linvel().y,
-          z: moveVector.z * speed,
-        },
-        true
-      );
-
-      // Keyboard movement directly controls hips & legs rotation
       const targetBodyAngle = Math.atan2(moveVector.x, moveVector.z);
-      const targetRotation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), targetBodyAngle);
-      group.current.quaternion.slerp(targetRotation, 14 * delta);
+
+      let angleDiff = targetBodyAngle - bodyAngle;
+      while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+      while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+
+      // Enter turning state if changing direction by more than 40 degrees (~0.7 rads)
+      if (Math.abs(angleDiff) > 0.7 && !turnAnticipationRef.current.isTurning) {
+        turnAnticipationRef.current.isTurning = true;
+      }
+      
+      turnAnticipationRef.current.targetAngle = targetBodyAngle;
+
+      if (turnAnticipationRef.current.isTurning) {
+        // Halt physical velocity while doing the anticipation turn
+        rigidBody.current.setLinvel({ x: 0, y: rigidBody.current.linvel().y, z: 0 }, true);
+
+        // Slowly pivot the hips/root to follow the turn
+        const targetRotation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), turnAnticipationRef.current.targetAngle);
+        group.current.quaternion.slerp(targetRotation, 5 * delta); // Slower pivot
+
+        // If body is close enough to target angle, end the turn anticipation and start walking
+        let hipsDiff = turnAnticipationRef.current.targetAngle - bodyAngle;
+        while (hipsDiff > Math.PI) hipsDiff -= Math.PI * 2;
+        while (hipsDiff < -Math.PI) hipsDiff += Math.PI * 2;
+
+        if (Math.abs(hipsDiff) < 0.25) {
+          turnAnticipationRef.current.isTurning = false;
+        }
+      } else {
+        // Normal walking
+        rigidBody.current.setLinvel(
+          {
+            x: moveVector.x * speed,
+            y: rigidBody.current.linvel().y,
+            z: moveVector.z * speed,
+          },
+          true
+        );
+
+        // Keyboard movement directly controls hips & legs rotation
+        const targetRotation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), targetBodyAngle);
+        group.current.quaternion.slerp(targetRotation, 14 * delta);
+      }
 
       // Evaluate Keyframe-based Walk Clip or Procedural Walk Cycle
       if (activeWalkClip && activeWalkClip.keyframes.length > 0) {
-        timeRef.current += delta * 1.1;
+        // Pause the walk cycle animation while doing a sharp staggered turn
+        if (!turnAnticipationRef.current.isTurning) {
+          timeRef.current += delta * 1.1;
+        }
         const clipTime = timeRef.current % activeWalkClip.duration;
         const kfs = [...activeWalkClip.keyframes].sort((a, b) => a.time - b.time);
 
@@ -403,6 +436,27 @@ export function Player({
         setBoneRot(leftForeArm.current, leftElbow, 0, 0, lerpSpeed);
       }
 
+      if (turnAnticipationRef.current.isTurning && head.current && spine2.current && spine1.current) {
+        let turnDiff = turnAnticipationRef.current.targetAngle - bodyAngle;
+        while (turnDiff > Math.PI) turnDiff -= Math.PI * 2;
+        while (turnDiff < -Math.PI) turnDiff += Math.PI * 2;
+        
+        const clampedTurnDiff = THREE.MathUtils.clamp(turnDiff, -Math.PI * 0.8, Math.PI * 0.8);
+        
+        // Head snaps quickly to look at the new direction
+        const headYaw = clampedTurnDiff * 0.8;
+        const headTarget = new THREE.Quaternion().setFromEuler(new THREE.Euler(head.current.rotation.x, headYaw, head.current.rotation.z, 'YXZ'));
+        head.current.quaternion.slerp(headTarget, 16 * delta);
+        
+        // Spine/Shoulders follow the head slightly slower
+        const shoulderYaw = clampedTurnDiff * 0.5;
+        const spine2Target = new THREE.Quaternion().setFromEuler(new THREE.Euler(spine2.current.rotation.x, shoulderYaw, spine2.current.rotation.z, 'YXZ'));
+        spine2.current.quaternion.slerp(spine2Target, 10 * delta);
+        
+        const spine1Yaw = clampedTurnDiff * 0.3;
+        const spine1Target = new THREE.Quaternion().setFromEuler(new THREE.Euler(spine1.current.rotation.x, spine1Yaw, spine1.current.rotation.z, 'YXZ'));
+        spine1.current.quaternion.slerp(spine1Target, 6 * delta);
+      }
     } else {
       // Stop horizontal movement when idle
       rigidBody.current.setLinvel(
