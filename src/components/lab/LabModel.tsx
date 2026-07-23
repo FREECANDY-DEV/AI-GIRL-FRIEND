@@ -119,6 +119,8 @@ export function LabModel({
   const initialQuaternions = useRef<Map<string, THREE.Quaternion>>(new Map());
   const initialPositions = useRef<Map<string, THREE.Vector3>>(new Map());
   const initialHipsPos = useRef<THREE.Vector3 | null>(null);
+  const transformRef = useRef<any>(null);
+  const isDraggingRef = useRef(false);
 
   const [boneJoints, setBoneJoints] = useState<Array<{ name: string; bone: THREE.Bone }>>([]);
   const [selectedBoneObj, setSelectedBoneObj] = useState<THREE.Bone | null>(null);
@@ -218,6 +220,11 @@ export function LabModel({
 
   useFrame((state) => {
     if (!scene) return;
+
+    // If a bone is actively being dragged, preserve its exact transform from the Gizmo
+    const draggedBone = isDraggingRef.current && selectedBoneName ? bonesMap.current.get(selectedBoneName) : null;
+    const draggedQ = draggedBone ? draggedBone.quaternion.clone() : null;
+    const draggedP = draggedBone ? draggedBone.position.clone() : null;
 
     // Reset bones to baseline GLTF rest quaternions and positions first
     bonesMap.current.forEach((bone, name) => {
@@ -323,9 +330,12 @@ export function LabModel({
         onDetectedCollisions?.(collisions);
       }
     }
+    // Restore the dragged bone's transform so the animation doesn't fight the user!
+    if (draggedBone && draggedQ && draggedP) {
+      draggedBone.quaternion.copy(draggedQ);
+      draggedBone.position.copy(draggedP);
+    }
   });
-
-  const transformRef = useRef<any>(null);
 
   useEffect(() => {
     const controls = transformRef.current;
@@ -453,6 +463,12 @@ export function LabModel({
           mode={gizmoMode}
           size={0.28}
           onObjectChange={handleGizmoChange}
+          onMouseDown={() => {
+            isDraggingRef.current = true;
+          }}
+          onMouseUp={() => {
+            isDraggingRef.current = false;
+          }}
         />
       )}
 
