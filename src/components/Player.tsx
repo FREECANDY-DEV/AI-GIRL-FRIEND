@@ -484,9 +484,9 @@ export function Player({
               })
             );
             mesh.rotation.x = -Math.PI / 2;
-            // The texture is oriented sideways, so add 90 degrees (Math.PI / 2) 
+            // The texture is oriented sideways, so subtract 90 degrees (Math.PI / 2) 
             // so the toe points in the direction the character is facing
-            mesh.rotation.z = -bodyAngle + Math.PI / 2;
+            mesh.rotation.z = -bodyAngle - Math.PI / 2;
             // Removed scale.x mirroring since we now have dedicated left/right textures
             mesh.position.copy(pos);
             footprintsGroupRef.current.add(mesh);
@@ -1066,7 +1066,9 @@ export function Player({
           
           camera.position.lerp(targetCamPos, Math.min(1, 1.5 * delta));
           
-          if (camera.position.distanceToSquared(targetCamPos) < 0.05) {
+          // Complete the transition if we are close enough, OR if the player starts moving!
+          // This prevents an eternal lag bug where the transition never finishes because the target is running away.
+          if (camera.position.distanceToSquared(targetCamPos) < 0.05 || isMoving) {
             hasInitOtsCamRef.current = true;
           }
         }
