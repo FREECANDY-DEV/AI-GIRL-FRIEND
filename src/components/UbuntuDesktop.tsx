@@ -78,6 +78,118 @@ export function UbuntuDesktop({ onClose }: UbuntuDesktopProps) {
     );
   }
 
+  // Terminal State
+  const [terminalHistory, setTerminalHistory] = useState<{ type: 'command' | 'output'; text: string }[]>([
+    { type: 'output', text: 'Welcome to the Ubuntu OS integration!' },
+    { type: 'output', text: 'Type "help" to see available commands.' }
+  ]);
+  const [currentDir, setCurrentDir] = useState('/home/user');
+  const [commandInput, setCommandInput] = useState('');
+
+  const executeCommand = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!commandInput.trim()) return;
+
+    const cmd = commandInput.trim();
+    setTerminalHistory(prev => [...prev, { type: 'command', text: `user@ubuntu:${currentDir === '/home/user' ? '~' : currentDir}$ ${cmd}` }]);
+    setCommandInput('');
+
+    const args = cmd.split(' ').filter(Boolean);
+    const command = args[0].toLowerCase();
+
+    // Import filesystem dynamically to avoid circular issues
+    const { resolvePath, getNodeAtPath } = await import('../utils/mockFileSystem');
+
+    setTimeout(() => {
+      let output = '';
+      
+      switch (command) {
+        case 'clear':
+          setTerminalHistory([]);
+          return;
+        case 'pwd':
+          output = currentDir;
+          break;
+        case 'whoami':
+          output = 'user';
+          break;
+        case 'echo':
+          output = args.slice(1).join(' ');
+          break;
+        case 'cd': {
+          const target = args[1] || '/home/user';
+          const newPath = resolvePath(currentDir, target);
+          if (!newPath) {
+            output = `cd: ${target}: No such file or directory`;
+          } else {
+            const node = getNodeAtPath(newPath);
+            if (!node) {
+              output = `cd: ${target}: No such file or directory`;
+            } else if (node.type !== 'dir') {
+              output = `cd: ${target}: Not a directory`;
+            } else {
+              setCurrentDir(newPath);
+              return; // Successful cd has no output
+            }
+          }
+          break;
+        }
+        case 'ls': {
+          const target = args[1] || '.';
+          const targetPath = resolvePath(currentDir, target);
+          if (!targetPath) {
+             output = `ls: cannot access '${target}': No such file or directory`;
+          } else {
+            const node = getNodeAtPath(targetPath);
+            if (!node) {
+              output = `ls: cannot access '${target}': No such file or directory`;
+            } else if (node.type === 'file') {
+              output = target;
+            } else {
+              const children = Object.keys(node.children);
+              // Simple formatting: space-separated
+              output = children.map(c => {
+                const childNode = node.children[c];
+                // if we want to differentiate dirs, maybe add trailing slash or colors.
+                return childNode.type === 'dir' ? `${c}/` : c;
+              }).join('  ');
+            }
+          }
+          break;
+        }
+        case 'cat': {
+          if (!args[1]) {
+            output = 'cat: missing operand';
+            break;
+          }
+          const targetPath = resolvePath(currentDir, args[1]);
+          if (!targetPath) {
+             output = `cat: ${args[1]}: No such file or directory`;
+          } else {
+            const node = getNodeAtPath(targetPath);
+            if (!node) {
+              output = `cat: ${args[1]}: No such file or directory`;
+            } else if (node.type === 'dir') {
+              output = `cat: ${args[1]}: Is a directory`;
+            } else {
+              output = node.content;
+            }
+          }
+          break;
+        }
+        case 'help':
+          output = 'Available commands: cd, ls, cat, pwd, echo, clear, whoami, help';
+          break;
+        default:
+          output = `${command}: command not found`;
+      }
+
+      if (output) {
+        setTerminalHistory(prev => [...prev, { type: 'output', text: output }]);
+      }
+    }, 50);
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex flex-col pointer-events-auto bg-slate-100 text-slate-800 font-sans animate-in zoom-in-95 duration-300">
       {/* Background Wallpaper Gradient - Light Grey/White */}
@@ -133,23 +245,46 @@ export function UbuntuDesktop({ onClose }: UbuntuDesktopProps) {
 
         {/* Desktop Workspace */}
         <div className="flex-1 p-8">
-          <div className="max-w-2xl mx-auto mt-20 bg-white border border-slate-300 rounded-xl shadow-2xl overflow-hidden backdrop-blur-md">
+          <div className="max-w-3xl mx-auto mt-10 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl overflow-hidden flex flex-col h-[500px]">
             {/* Window Header */}
-            <div className="h-10 bg-slate-100 border-b border-slate-200 flex items-center px-4 justify-between">
-              <div className="text-sm font-semibold text-slate-700">Terminal</div>
+            <div className="h-10 bg-slate-800 border-b border-slate-700 flex items-center px-4 justify-between shrink-0">
+              <div className="text-sm font-semibold text-slate-300 flex items-center gap-2">
+                <Terminal size={14} /> user@ubuntu:~
+              </div>
               <div className="flex gap-2">
-                <div className="w-3.5 h-3.5 rounded-full bg-slate-300 hover:bg-slate-400 transition cursor-pointer"></div>
-                <div className="w-3.5 h-3.5 rounded-full bg-slate-300 hover:bg-slate-400 transition cursor-pointer"></div>
-                <div className="w-3.5 h-3.5 rounded-full bg-red-400 flex items-center justify-center cursor-pointer hover:bg-red-500 transition group" onClick={onClose}>
+                <div className="w-3.5 h-3.5 rounded-full bg-slate-600 hover:bg-slate-500 transition cursor-pointer"></div>
+                <div className="w-3.5 h-3.5 rounded-full bg-slate-600 hover:bg-slate-500 transition cursor-pointer"></div>
+                <div className="w-3.5 h-3.5 rounded-full bg-red-500/80 flex items-center justify-center cursor-pointer hover:bg-red-500 transition group" onClick={onClose}>
                   <X size={10} className="text-white opacity-0 group-hover:opacity-100" />
                 </div>
               </div>
             </div>
             {/* Window Body */}
-            <div className="p-4 font-mono text-sm text-slate-800 h-64 overflow-y-auto bg-white">
-              <div>user@ubuntu:~$ echo "Welcome to the Ubuntu OS integration!"</div>
-              <div className="text-slate-600">Welcome to the Ubuntu OS integration!</div>
-              <div className="mt-2">user@ubuntu:~$ _<span className="animate-pulse">|</span></div>
+            <div 
+              className="flex-1 p-4 font-mono text-sm text-slate-300 overflow-y-auto bg-slate-900 flex flex-col"
+              onClick={() => document.getElementById('terminal-input')?.focus()}
+            >
+              {terminalHistory.map((item, idx) => (
+                <div key={idx} className={`whitespace-pre-wrap ${item.type === 'command' ? 'text-green-400 font-semibold' : 'text-slate-300'} mb-1`}>
+                  {item.text}
+                </div>
+              ))}
+              
+              <form onSubmit={executeCommand} className="flex mt-1">
+                <span className="text-green-400 font-semibold mr-2 shrink-0">
+                  user@ubuntu:{currentDir === '/home/user' ? '~' : currentDir}$
+                </span>
+                <input 
+                  id="terminal-input"
+                  type="text" 
+                  value={commandInput}
+                  onChange={(e) => setCommandInput(e.target.value)}
+                  className="flex-1 bg-transparent border-none outline-none text-slate-300 caret-slate-300"
+                  autoFocus
+                  autoComplete="off"
+                  spellCheck="false"
+                />
+              </form>
             </div>
           </div>
         </div>
