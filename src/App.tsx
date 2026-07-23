@@ -17,6 +17,7 @@ import { StreetLightPole } from './components/StreetLightPole';
 import { Laptop } from './components/Laptop';
 import { BackgroundMusic } from './components/BackgroundMusic';
 import { UbuntuDesktop } from './components/UbuntuDesktop';
+import { CharacterProfile } from './components/CharacterProfile';
 import { Wand2 } from 'lucide-react';
 import { SceneSettingsPanel } from './components/SceneSettingsPanel';
 import { StandingPoseConfig, AnimationClip, PosePreset } from './types/animation';
@@ -923,6 +924,9 @@ export default function App() {
       {isDesktopOpen && (
         <UbuntuDesktop onClose={() => setIsDesktopOpen(false)} />
       )}
+      
+      {/* Character Profile Widget */}
+      <CharacterProfile />
     </div>
   );
 }
