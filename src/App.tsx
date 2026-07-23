@@ -211,7 +211,9 @@ export default function App() {
 
   // Active walk & idle clip objects used by Player in the game map
   const activeWalkClip = customClips.find((c) => c.id === activeWalkClipId) || customClips[0] || null;
-  const activeIdleClip = customClips.find((c) => c.id === 'breathing_idle') || customClips[0] || null;
+  const hasUserPrompted = chatHistory.length > 0;
+  const idleClipId = hasUserPrompted ? 'breathing_idle' : 'wave_hello';
+  const activeIdleClip = customClips.find((c) => c.id === idleClipId) || customClips[0] || null;
 
   // Resolve the active thinking pose
   const allPoses = [...POSE_PRESETS, ...customPoses];
