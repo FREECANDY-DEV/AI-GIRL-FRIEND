@@ -570,7 +570,21 @@ export function Player({
       }
     }
 
-    // 2. Real Human Flesh & Bone Self-Collision Solver (Active during bone dragging)
+      // Apply procedural camera look-at tracking ON TOP of any idle/walking animation
+      // Only do this if not in free camera and if we aren't actively correcting the body
+      if (!isFreeCamera && !isBodyCorrectingRef.current && !isMoving && head.current && spine2.current && spine1.current) {
+        // Use slerp to blend the animation's rotation with the target look rotation
+        const headTarget = new THREE.Quaternion().setFromEuler(new THREE.Euler(head.current.rotation.x, headYaw, head.current.rotation.z, 'YXZ'));
+        head.current.quaternion.slerp(headTarget, 8 * delta);
+
+        const spine2Target = new THREE.Quaternion().setFromEuler(new THREE.Euler(spine2.current.rotation.x, shoulderYaw, spine2.current.rotation.z, 'YXZ'));
+        spine2.current.quaternion.slerp(spine2Target, 6 * delta);
+
+        const spine1Target = new THREE.Quaternion().setFromEuler(new THREE.Euler(spine1.current.rotation.x, spine1Yaw, spine1.current.rotation.z, 'YXZ'));
+        spine1.current.quaternion.slerp(spine1Target, 4 * delta);
+      }
+
+      // 2. Real Human Flesh & Bone Self-Collision Solver (Active during bone dragging)
     if (isDragMode && draggedBoneNameRef.current && bonesMapRef.current.size > 0) {
       resolveLimbWrappingCollisions(bonesMapRef.current, draggedBoneNameRef.current);
     }
@@ -651,31 +665,27 @@ export function Player({
         orbitControlsRef.current.update();
       } else if (!isFreeCamera) {
         hasInitFreeCamRef.current = false;
-        // Character Face Direction Vector & Right Vector
-        const faceDir = new THREE.Vector3(0, 0, 1).applyQuaternion(group.current.quaternion);
-        faceDir.y = 0;
-        if (faceDir.lengthSq() > 0.001) faceDir.normalize();
 
-        const faceRight = new THREE.Vector3(1, 0, 0).applyQuaternion(group.current.quaternion);
-        faceRight.y = 0;
-        if (faceRight.lengthSq() > 0.001) faceRight.normalize();
+        const camRight = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
+        camRight.y = 0;
+        if (camRight.lengthSq() > 0.001) camRight.normalize();
 
-        // Target lookAt point directly in front of her right shoulder
+        // Target lookAt point is offset to the right of the character (from camera's perspective)
+        // This puts the character on the left side of the screen (Over The Right Shoulder)
         const lookAtTarget = playerWorldPos
           .clone()
           .add(new THREE.Vector3(0, 1.45 + shakeY, 0))
-          .add(faceRight.clone().multiplyScalar(0.35 + shakeX))
-          .add(faceDir.clone().multiplyScalar(1.2));
+          .add(camRight.multiplyScalar(0.4 + shakeX));
 
-        // Fixed camera position locked right behind her right shoulder facing her look direction
-        const idealCamPos = playerWorldPos
-          .clone()
-          .sub(faceDir.clone().multiplyScalar(2.2))
-          .add(faceRight.clone().multiplyScalar(0.45))
-          .add(new THREE.Vector3(0, 1.55 + shakeY, 0));
-
-        camera.position.lerp(idealCamPos, Math.min(1, 8.0 * delta));
+        // Smoothly move the orbit target
         orbitControlsRef.current.target.lerp(lookAtTarget, Math.min(1, 12 * delta));
+        
+        // Ensure the camera doesn't zoom too far out in OTS mode
+        if (orbitControlsRef.current.getDistance() > 3.0) {
+           const dir = camera.position.clone().sub(lookAtTarget).normalize();
+           camera.position.copy(lookAtTarget.clone().add(dir.multiplyScalar(3.0)));
+        }
+
         orbitControlsRef.current.update();
       }
     }
