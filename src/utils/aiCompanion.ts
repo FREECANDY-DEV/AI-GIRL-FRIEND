@@ -180,6 +180,17 @@ export function speakFemaleTTS(text: string) {
       utterance.pitch = 1.2;
       utterance.rate = 1.0;
 
+      utterance.onboundary = (event) => {
+        if (event.name === 'word') {
+          const word = cleanText.substring(event.charIndex).split(/[\s,.]+/)[0];
+          window.dispatchEvent(new CustomEvent('tts-word-boundary', { detail: { word } }));
+        }
+      };
+      
+      utterance.onend = () => {
+         window.dispatchEvent(new Event('tts-end'));
+      };
+
       window.speechSynthesis.speak(utterance);
     };
 

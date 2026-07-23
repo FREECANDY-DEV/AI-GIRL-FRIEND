@@ -78,6 +78,26 @@ export function Player({
   const hasInitFreeCamRef = useRef(false);
   const isZoomedCloseRef = useRef(false);
 
+  const ttsWordRef = useRef('');
+  const ttsBoundaryTimeRef = useRef(0);
+
+  useEffect(() => {
+    const onBoundary = (e: any) => {
+      ttsWordRef.current = e.detail?.word || '';
+      ttsBoundaryTimeRef.current = performance.now();
+    };
+    const onEnd = () => {
+      ttsWordRef.current = '';
+    };
+
+    window.addEventListener('tts-word-boundary', onBoundary);
+    window.addEventListener('tts-end', onEnd);
+    return () => {
+      window.removeEventListener('tts-word-boundary', onBoundary);
+      window.removeEventListener('tts-end', onEnd);
+    };
+  }, []);
+
   useEffect(() => {
     if (scene) {
       scene.traverse((child) => {
@@ -567,10 +587,22 @@ export function Player({
         
         let targetIntensity = 0;
         if (isSpeaking) {
-          // Create an organic, randomized fast flapping value based on time to simulate phonemes
-          const t = state.clock.elapsedTime;
-          const flap = (Math.sin(t * 20) + Math.cos(t * 13)) * 0.5 + 0.5; // 0 to 1
-          targetIntensity = flap * (0.3 + Math.random() * 0.4);
+          const now = performance.now();
+          const timeSinceBoundary = (now - ttsBoundaryTimeRef.current) / 1000;
+          const currentWord = ttsWordRef.current;
+          
+          if (timeSinceBoundary < 0.3 && currentWord.length > 0) {
+             const wordLen = currentWord.length;
+             const hasVowel = /[aeiouAEIOU]/.test(currentWord);
+             const baseOpen = hasVowel ? 0.6 : 0.3;
+             
+             // Flap using sine wave scaled by word length to simulate syllable pulses
+             const flap = (Math.sin(timeSinceBoundary * Math.PI * (wordLen > 4 ? 14 : 22)) + 1) * 0.5;
+             targetIntensity = baseOpen * flap * (0.8 + Math.random() * 0.2);
+          } else {
+             // Closed or slight pause between words
+             targetIntensity = 0.02;
+          }
         }
 
         if (jawOpenIdx !== undefined) {
