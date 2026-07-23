@@ -1,8 +1,15 @@
+import vac1 from '../../LaptopFiles/vacation/vacation1.png';
+import vac2 from '../../LaptopFiles/vacation/vacation2.png';
+import vac3 from '../../LaptopFiles/vacation/vacation3.png';
+import vac4 from '../../LaptopFiles/vacation/vacation4_feets.png';
+import vac5 from '../../LaptopFiles/vacation/vacation5.png';
+
 export type NodeType = 'file' | 'dir';
 
 export interface FileNode {
   type: 'file';
   content: string;
+  isImage?: boolean;
 }
 
 export interface DirNode {
@@ -53,10 +60,11 @@ export const MOCK_FS: DirNode = {
                 Vacation: {
                   type: 'dir',
                   children: {
-                    'vacation1.png': { type: 'file', content: '[PNG Image Data...]' },
-                    'vacation2.png': { type: 'file', content: '[PNG Image Data...]' },
-                    'vacation3.png': { type: 'file', content: '[PNG Image Data...]' },
-                    'vacation4_feets.png': { type: 'file', content: '[PNG Image Data: Feet Picture]' },
+                    'vacation1.png': { type: 'file', content: vac1, isImage: true },
+                    'vacation2.png': { type: 'file', content: vac2, isImage: true },
+                    'vacation3.png': { type: 'file', content: vac3, isImage: true },
+                    'vacation4_feets.png': { type: 'file', content: vac4, isImage: true },
+                    'vacation5.png': { type: 'file', content: vac5, isImage: true },
                   }
                 }
               }

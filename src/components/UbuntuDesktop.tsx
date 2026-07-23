@@ -20,6 +20,14 @@ export function UbuntuDesktop({ onClose }: UbuntuDesktopProps) {
   const [currentDir, setCurrentDir] = useState('/home/user');
   const [commandInput, setCommandInput] = useState('');
 
+  // Files App State
+  const [isFilesOpen, setIsFilesOpen] = useState(false);
+  const [filesCurrentDir, setFilesCurrentDir] = useState('/home/user');
+  
+  // Image Viewer State
+  const [isImageViewerOpen, setIsImageViewerOpen] = useState(false);
+  const [currentImageSrc, setCurrentImageSrc] = useState<string | null>(null);
+
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
@@ -249,12 +257,12 @@ export function UbuntuDesktop({ onClose }: UbuntuDesktopProps) {
       {/* Main Desktop Area */}
       <div className="relative z-0 flex-1 flex">
         {/* Left Dock - Light Theme */}
-        <div className="w-16 h-full bg-white/60 flex flex-col items-center py-4 gap-4 border-r border-slate-300 backdrop-blur-md shadow-[2px_0_10px_rgba(0,0,0,0.05)]">
+        <div className="w-16 h-full bg-white/60 flex flex-col items-center py-4 gap-4 border-r border-slate-300 backdrop-blur-md shadow-[2px_0_10px_rgba(0,0,0,0.05)] z-20">
           <button className="p-2.5 rounded-xl hover:bg-slate-200/80 transition group relative">
             <Chrome size={28} className="text-blue-500 drop-shadow-sm" />
             <span className="absolute left-14 bg-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition whitespace-nowrap pointer-events-none shadow-md border border-slate-200 text-slate-700 font-medium">Web Browser</span>
           </button>
-          <button className="p-2.5 rounded-xl hover:bg-slate-200/80 transition group relative">
+          <button onClick={() => setIsFilesOpen(true)} className="p-2.5 rounded-xl hover:bg-slate-200/80 transition group relative">
             <Folder size={28} className="text-blue-600 fill-blue-500/20 drop-shadow-sm" />
             <span className="absolute left-14 bg-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition whitespace-nowrap pointer-events-none shadow-md border border-slate-200 text-slate-700 font-medium">Files</span>
           </button>
@@ -272,8 +280,11 @@ export function UbuntuDesktop({ onClose }: UbuntuDesktopProps) {
         </div>
 
         {/* Desktop Workspace */}
-        <div className="flex-1 p-8">
-          <div className="max-w-3xl mx-auto mt-10 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl overflow-hidden flex flex-col h-[500px]">
+        <div className="flex-1 p-8 relative overflow-hidden pointer-events-none">
+          <div className="pointer-events-auto absolute inset-0 p-8 flex flex-col gap-4">
+            
+            {/* Terminal Window */}
+            <div className="max-w-3xl mx-auto w-full bg-slate-900 border border-slate-700 rounded-xl shadow-2xl overflow-hidden flex flex-col h-[400px]">
             {/* Window Header */}
             <div className="h-10 bg-slate-800 border-b border-slate-700 flex items-center px-4 justify-between shrink-0">
               <div className="text-sm font-semibold text-slate-300 flex items-center gap-2">
@@ -314,6 +325,120 @@ export function UbuntuDesktop({ onClose }: UbuntuDesktopProps) {
                 />
               </form>
             </div>
+          </div>
+          
+          {/* File Manager Window */}
+          {isFilesOpen && (
+            <div className="max-w-4xl mx-auto w-full bg-white border border-slate-300 rounded-xl shadow-2xl overflow-hidden flex flex-col h-[500px] pointer-events-auto">
+              {/* Header */}
+              <div className="h-12 bg-slate-100 border-b border-slate-200 flex items-center px-4 justify-between shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="flex gap-2 mr-4">
+                    <div className="w-3.5 h-3.5 rounded-full bg-slate-300 hover:bg-slate-400 transition cursor-pointer"></div>
+                    <div className="w-3.5 h-3.5 rounded-full bg-slate-300 hover:bg-slate-400 transition cursor-pointer"></div>
+                    <div className="w-3.5 h-3.5 rounded-full bg-red-400 flex items-center justify-center cursor-pointer hover:bg-red-500 transition group" onClick={() => setIsFilesOpen(false)}>
+                      <X size={10} className="text-white opacity-0 group-hover:opacity-100" />
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setFilesCurrentDir(filesCurrentDir.split('/').slice(0, -1).join('/') || '/home/user')}
+                    className="p-1 hover:bg-slate-200 rounded text-slate-600"
+                    disabled={filesCurrentDir === '/home/user'}
+                  >
+                    ←
+                  </button>
+                  <div className="text-sm font-medium text-slate-700 bg-white px-3 py-1 rounded shadow-sm border border-slate-200">
+                    {filesCurrentDir}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Body */}
+              <div className="flex-1 flex bg-white overflow-hidden">
+                <div className="w-48 bg-slate-50 border-r border-slate-200 p-4 flex flex-col gap-2">
+                  <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Places</div>
+                  <button onClick={() => setFilesCurrentDir('/home/user')} className="flex items-center gap-3 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-600 p-2 rounded transition">
+                    <Folder size={16} /> Home
+                  </button>
+                  <button onClick={() => setFilesCurrentDir('/home/user/Desktop')} className="flex items-center gap-3 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-600 p-2 rounded transition">
+                    <Folder size={16} /> Desktop
+                  </button>
+                  <button onClick={() => setFilesCurrentDir('/home/user/Pictures')} className="flex items-center gap-3 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-600 p-2 rounded transition">
+                    <Folder size={16} /> Pictures
+                  </button>
+                </div>
+                <div className="flex-1 p-6 overflow-y-auto">
+                  <div className="grid grid-cols-4 gap-6">
+                    {(() => {
+                      const node = getNodeAtPath(filesCurrentDir);
+                      if (!node || node.type !== 'dir') return <div className="col-span-4 text-slate-500 text-center mt-10">Folder is empty or unreadable.</div>;
+                      
+                      return Object.keys(node.children).map(childName => {
+                        const childNode = node.children[childName];
+                        if (childName.startsWith('.')) return null; // hide dotfiles
+                        
+                        return (
+                          <div 
+                            key={childName}
+                            className="flex flex-col items-center gap-2 cursor-pointer group"
+                            onDoubleClick={() => {
+                              if (childNode.type === 'dir') {
+                                setFilesCurrentDir(`${filesCurrentDir}/${childName}`);
+                              } else if (childNode.type === 'file' && childNode.isImage) {
+                                setCurrentImageSrc(childNode.content);
+                                setIsImageViewerOpen(true);
+                                if (childName.includes('vacation4_feets.png')) {
+                                  window.dispatchEvent(new CustomEvent('avaFeetPicFound'));
+                                }
+                              } else {
+                                alert('Cannot open text files in the GUI yet! Use the terminal "cat" command.');
+                              }
+                            }}
+                          >
+                            <div className="w-16 h-16 bg-blue-50 rounded-xl flex items-center justify-center group-hover:bg-blue-100 transition shadow-sm border border-blue-100">
+                              {childNode.type === 'dir' ? (
+                                <Folder size={32} className="text-blue-500 fill-blue-500/20" />
+                              ) : childNode.isImage ? (
+                                <div className="w-12 h-12 bg-slate-200 rounded overflow-hidden shadow-sm">
+                                  <img src={childNode.content} alt={childName} className="w-full h-full object-cover" />
+                                </div>
+                              ) : (
+                                <div className="w-10 h-12 bg-white border border-slate-300 shadow-sm rounded-sm flex items-start justify-end p-1">
+                                  <div className="w-3 h-3 border-l border-b border-slate-300" />
+                                </div>
+                              )}
+                            </div>
+                            <span className="text-xs text-slate-700 text-center w-full truncate">{childName}</span>
+                          </div>
+                        );
+                      });
+                    })()}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Image Viewer Window */}
+          {isImageViewerOpen && currentImageSrc && (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-8 pointer-events-auto" onClick={() => setIsImageViewerOpen(false)}>
+              <div 
+                className="bg-slate-900 rounded-xl overflow-hidden shadow-2xl border border-slate-700 max-w-4xl max-h-full flex flex-col"
+                onClick={e => e.stopPropagation()}
+              >
+                <div className="h-10 bg-slate-800 border-b border-slate-700 flex items-center px-4 justify-between shrink-0">
+                  <div className="text-sm font-medium text-slate-300">Image Viewer</div>
+                  <div className="w-3.5 h-3.5 rounded-full bg-red-500/80 flex items-center justify-center cursor-pointer hover:bg-red-500 transition group" onClick={() => setIsImageViewerOpen(false)}>
+                    <X size={10} className="text-white opacity-0 group-hover:opacity-100" />
+                  </div>
+                </div>
+                <div className="flex-1 overflow-auto p-4 flex items-center justify-center">
+                  <img src={currentImageSrc} alt="Viewing" className="max-w-full max-h-[70vh] object-contain rounded shadow-lg" />
+                </div>
+              </div>
+            </div>
+          )}
+
           </div>
         </div>
       </div>
