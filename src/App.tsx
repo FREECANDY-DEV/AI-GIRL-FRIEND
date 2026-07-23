@@ -127,6 +127,23 @@ export default function App() {
     }
   });
 
+  // Active Thinking Pose ID (Persisted in LocalStorage)
+  const [activeThinkingPoseId, setActiveThinkingPoseId] = useState<string>(() => {
+    try {
+      return localStorage.getItem('lab_active_thinking_pose_v2') || 'thinking_pose';
+    } catch {
+      return 'thinking_pose';
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('lab_active_thinking_pose_v2', activeThinkingPoseId);
+    } catch (e) {
+      console.error('Failed to save thinking pose id:', e);
+    }
+  }, [activeThinkingPoseId]);
+
   useEffect(() => {
     try {
       localStorage.setItem('lab_standing_pose_v2', JSON.stringify(standingPose));
@@ -175,8 +192,7 @@ export default function App() {
 
   // Resolve the active thinking pose
   const allPoses = [...POSE_PRESETS, ...customPoses];
-  // Favor a custom pose named 'AI Thinking' or id 'thinking_pose', fallback to the preset
-  const activeThinkingPose = allPoses.slice().reverse().find(p => p.name === 'AI Thinking' || p.id === 'thinking_pose') || POSE_PRESETS.find(p => p.id === 'thinking_pose') || POSE_PRESETS[0];
+  const activeThinkingPose = allPoses.find(p => p.id === activeThinkingPoseId) || POSE_PRESETS.find(p => p.id === 'thinking_pose') || POSE_PRESETS[0];
 
   const finalStandingPose = isAiThinking ? activeThinkingPose.pose : standingPose;
 
@@ -339,6 +355,8 @@ export default function App() {
         onUpdateCustomPoses={setCustomPoses}
         activeWalkClipId={activeWalkClipId}
         onSelectActiveWalkClip={setActiveWalkClipId}
+        activeThinkingPoseId={activeThinkingPoseId}
+        onSelectActiveThinkingPose={setActiveThinkingPoseId}
         onOpenLab={handleOpenLab}
         onBackToGame={() => setCurrentView('game')}
       />
@@ -767,6 +785,8 @@ export default function App() {
               onUpdateCustomPoses={setCustomPoses}
               activeWalkClipId={activeWalkClipId}
               onSelectActiveWalkClip={setActiveWalkClipId}
+              activeThinkingPoseId={activeThinkingPoseId}
+              onSelectActiveThinkingPose={setActiveThinkingPoseId}
               onOpenLab={(mode, id) => {
                 setIsLibraryOpen(false);
                 handleOpenLab(mode, id);

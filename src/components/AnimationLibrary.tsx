@@ -17,6 +17,7 @@ import {
   ArrowRight,
   Bookmark,
   Activity,
+  Brain,
 } from 'lucide-react';
 
 interface AnimationLibraryProps {
@@ -28,6 +29,8 @@ interface AnimationLibraryProps {
   onUpdateCustomPoses: (poses: PosePreset[]) => void;
   activeWalkClipId: string;
   onSelectActiveWalkClip: (clipId: string) => void;
+  activeThinkingPoseId: string;
+  onSelectActiveThinkingPose: (id: string) => void;
   onOpenLab: (mode: 'timeline' | 'pose', targetId?: string) => void;
   onBackToGame: () => void;
   isPanel?: boolean;
@@ -42,6 +45,8 @@ export function AnimationLibrary({
   onUpdateCustomPoses,
   activeWalkClipId,
   onSelectActiveWalkClip,
+  activeThinkingPoseId,
+  onSelectActiveThinkingPose,
   onOpenLab,
   onBackToGame,
   isPanel = false,
@@ -465,7 +470,19 @@ export function AnimationLibrary({
                             title="Apply this stance to character in Game Map"
                           >
                             <Check size={12} />
-                            <span>Apply</span>
+                            <span>Idle</span>
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              onSelectActiveThinkingPose(preset.id);
+                              triggerNotifier(`Set "${preset.name}" as Active AI Thinking Pose`);
+                            }}
+                            className={`px-2 py-1.5 rounded-lg font-bold text-[11px] flex items-center gap-1 transition ${activeThinkingPoseId === preset.id ? 'bg-amber-600 text-white' : 'bg-slate-800 hover:bg-slate-700 text-amber-400'}`}
+                            title="Apply this stance to character when AI is thinking"
+                          >
+                            <Brain size={12} />
+                            <span>Thinking</span>
                           </button>
 
                           <button

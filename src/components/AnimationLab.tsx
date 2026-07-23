@@ -646,7 +646,14 @@ export function AnimationLab({
 
   const handleSaveCustomPose = (newPose: PosePreset) => {
     if (onUpdateCustomPoses) {
-      onUpdateCustomPoses([...customPoses, newPose]);
+      const existingIdx = customPoses.findIndex(p => p.name.toLowerCase() === newPose.name.toLowerCase());
+      if (existingIdx !== -1) {
+        const updatedPoses = [...customPoses];
+        updatedPoses[existingIdx] = newPose;
+        onUpdateCustomPoses(updatedPoses);
+      } else {
+        onUpdateCustomPoses([...customPoses, newPose]);
+      }
     }
   };
 
