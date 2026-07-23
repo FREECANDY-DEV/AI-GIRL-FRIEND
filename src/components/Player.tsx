@@ -316,8 +316,9 @@ export function Player({
       while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
       while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
 
-      // Enter turning state if changing direction by more than 40 degrees (~0.7 rads)
-      if (Math.abs(angleDiff) > 0.7 && !turnAnticipationRef.current.isTurning) {
+      // Only enter turning state if completely reversing direction (e.g., > 140 degrees / 2.5 rads)
+      // This prevents the walking animation from stuttering/pausing during normal steering
+      if (Math.abs(angleDiff) > 2.5 && !turnAnticipationRef.current.isTurning) {
         turnAnticipationRef.current.isTurning = true;
       }
       
