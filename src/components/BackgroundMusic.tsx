@@ -1,71 +1,84 @@
 import { useEffect, useRef, useState } from 'react';
 import { Volume2, VolumeX, Activity } from 'lucide-react';
 
+// Global instances to persist across React StrictMode re-renders
+let sharedAudio: HTMLAudioElement | null = null;
+let sharedCtx: AudioContext | null = null;
+let sharedAnalyser: AnalyserNode | null = null;
+let isContextInitializing = false;
+
 export function BackgroundMusic() {
-  const audioRef = useRef<HTMLAudioElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true); // Must start muted to bypass browser autoplay block
   const [isPlaying, setIsPlaying] = useState(false);
-  const audioCtxRef = useRef<AudioContext | null>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
   const animationRef = useRef<number | null>(null);
-  const isInitializedRef = useRef(false);
 
   useEffect(() => {
-    if (!audioRef.current) return;
+    if (!sharedAudio) {
+      sharedAudio = new Audio(import.meta.env.BASE_URL + 'Sounds/Roulette After Dark.mp3');
+      sharedAudio.loop = true;
+      sharedAudio.crossOrigin = 'anonymous'; // Required for Web Audio API Analyzer
+      sharedAudio.volume = 0.005; // Extremely low volume
+      sharedAudio.muted = true; // Required by browsers to autoplay without interaction
+    }
 
-    // Make the volume much lower
-    audioRef.current.volume = 0.02;
+    const audio = sharedAudio;
 
-    const initAudio = () => {
-      if (isInitializedRef.current || !audioRef.current) return;
-      
+    const setupAudioContext = () => {
+      if (sharedCtx || isContextInitializing) return;
+      isContextInitializing = true;
       try {
         const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-        const ctx = new AudioContextClass();
-        audioCtxRef.current = ctx;
-
-        const analyser = ctx.createAnalyser();
-        analyser.fftSize = 128; 
-        analyserRef.current = analyser;
-
-        const source = ctx.createMediaElementSource(audioRef.current);
-        source.connect(analyser);
-        analyser.connect(ctx.destination);
+        sharedCtx = new AudioContextClass();
+        sharedAnalyser = sharedCtx.createAnalyser();
+        sharedAnalyser.fftSize = 128;
         
-        isInitializedRef.current = true;
-      } catch (err) {
-        console.warn("AudioContext init failed:", err);
+        const source = sharedCtx.createMediaElementSource(audio);
+        source.connect(sharedAnalyser);
+        sharedAnalyser.connect(sharedCtx.destination);
+      } catch (e) {
+        console.warn("AudioContext init failed:", e);
       }
+      isContextInitializing = false;
     };
 
-    // Initialize Web Audio API immediately to connect the node
-    initAudio();
+    const onPlay = () => setIsPlaying(true);
+    const onPause = () => setIsPlaying(false);
+    
+    audio.addEventListener('play', onPlay);
+    audio.addEventListener('pause', onPause);
 
-    // Try to play immediately (might be blocked by browser)
-    audioRef.current.play().then(() => {
+    // Guaranteed autoplay by starting muted
+    audio.play().then(() => {
       setIsPlaying(true);
     }).catch(() => {
-      // Autoplay blocked, wait for user interaction
+      // Very strict browsers might even block muted autoplay, wait for interaction
     });
 
     const handleInteraction = () => {
-      if (audioCtxRef.current?.state === 'suspended') {
-        audioCtxRef.current.resume();
+      setupAudioContext();
+      if (sharedCtx && sharedCtx.state === 'suspended') {
+        sharedCtx.resume();
       }
-      if (audioRef.current && audioRef.current.paused) {
-        audioRef.current.play().catch(() => {});
+      if (audio.paused) {
+        audio.play().catch(() => {});
       }
       window.removeEventListener('click', handleInteraction);
       window.removeEventListener('keydown', handleInteraction);
+      window.removeEventListener('touchstart', handleInteraction);
     };
 
+    // Listen for any interaction to bootstrap the AudioContext
     window.addEventListener('click', handleInteraction);
     window.addEventListener('keydown', handleInteraction);
+    window.addEventListener('touchstart', handleInteraction);
 
     return () => {
+      audio.removeEventListener('play', onPlay);
+      audio.removeEventListener('pause', onPause);
       window.removeEventListener('click', handleInteraction);
       window.removeEventListener('keydown', handleInteraction);
+      window.removeEventListener('touchstart', handleInteraction);
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
   }, []);
@@ -75,13 +88,13 @@ export function BackgroundMusic() {
     const drawWaveform = () => {
       animationRef.current = requestAnimationFrame(drawWaveform);
 
-      if (!canvasRef.current || !analyserRef.current) return;
+      if (!canvasRef.current || !sharedAnalyser) return;
 
       const canvas = canvasRef.current;
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
-      const analyser = analyserRef.current;
+      const analyser = sharedAnalyser;
       const bufferLength = analyser.frequencyBinCount;
       const dataArray = new Uint8Array(bufferLength);
       analyser.getByteTimeDomainData(dataArray);
@@ -111,38 +124,44 @@ export function BackgroundMusic() {
       ctx.stroke();
     };
 
-    drawWaveform();
+    if (isPlaying) {
+      drawWaveform();
+    }
 
     return () => {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
-  }, []);
+  }, [isPlaying]);
 
   const toggleMute = () => {
-    if (audioRef.current) {
-      if (audioCtxRef.current?.state === 'suspended') {
-        audioCtxRef.current.resume();
+    if (sharedAudio) {
+      if (!sharedCtx) {
+        // Bootstrap context if clicking mute before anything else
+        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+        sharedCtx = new AudioContextClass();
+        sharedAnalyser = sharedCtx.createAnalyser();
+        sharedAnalyser.fftSize = 128;
+        const source = sharedCtx.createMediaElementSource(sharedAudio);
+        source.connect(sharedAnalyser);
+        sharedAnalyser.connect(sharedCtx.destination);
+      }
+      
+      if (sharedCtx.state === 'suspended') {
+        sharedCtx.resume();
       }
       
       const newMutedState = !isMuted;
-      audioRef.current.muted = newMutedState;
+      sharedAudio.muted = newMutedState;
       setIsMuted(newMutedState);
       
-      if (audioRef.current.paused) {
-        audioRef.current.play().catch(() => {});
+      if (sharedAudio.paused) {
+        sharedAudio.play().catch(() => {});
       }
     }
   };
 
   return (
     <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-30 pointer-events-auto flex items-center gap-2 bg-slate-900/95 border border-slate-800 p-2 rounded-2xl shadow-2xl backdrop-blur-xl animate-in fade-in duration-300">
-      <audio
-        ref={audioRef}
-        src={import.meta.env.BASE_URL + 'Sounds/Roulette After Dark.mp3'}
-        loop
-        onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
-      />
       
       <button
         onClick={toggleMute}
