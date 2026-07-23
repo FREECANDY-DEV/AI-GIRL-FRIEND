@@ -64,24 +64,25 @@ export function Laptop({ position, onOpenDesktop }: LaptopProps) {
         <primitive object={scene} scale={0.1} rotation={[0, -Math.PI / 4, 0]} />
         
         {/* Screen Glow projecting outwards */}
-        <spotLight 
-          position={[0, 0.15, 0.05]} 
-          angle={Math.PI / 3} 
-          penumbra={0.8} 
+        <pointLight 
+          position={[-0.12, 0.15, -0.12]} 
           color="#3b82f6" 
-          intensity={15} 
-          distance={4} 
-          castShadow 
+          intensity={2} 
+          distance={2} 
         />
-        <pointLight position={[0, 0.15, 0.05]} color="#ffffff" intensity={0.5} distance={0.5} />
+        <pointLight 
+          position={[-0.12, 0.15, -0.12]} 
+          color="#ffffff" 
+          intensity={0.5} 
+          distance={0.5} 
+        />
 
         {/* Ubuntu Login Screen Overlay */}
         <Html 
           transform 
-          position={[0, 0.17, -0.065]} 
+          position={[-0.12, 0.17, -0.12]} 
           rotation={[-0.15, -Math.PI / 4, 0]} 
           scale={0.025}
-          occlude
         >
           <div 
             className="w-[400px] h-[250px] flex flex-col items-center justify-center rounded overflow-hidden shadow-[0_0_30px_rgba(59,130,246,0.6)] cursor-pointer bg-cover bg-center"
