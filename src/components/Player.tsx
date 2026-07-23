@@ -366,18 +366,29 @@ export function Player({
         const kfs = [...activeWalkClip.keyframes].sort((a, b) => a.time - b.time);
 
         let prev = kfs[0];
-        let next = kfs[kfs.length - 1];
+        let next = kfs[0];
+        let factor = 0;
+        
+        const lastKfTime = kfs[kfs.length - 1].time;
 
-        for (let i = 0; i < kfs.length - 1; i++) {
-          if (clipTime >= kfs[i].time && clipTime <= kfs[i + 1].time) {
-            prev = kfs[i];
-            next = kfs[i + 1];
-            break;
+        if (clipTime >= lastKfTime) {
+          // Seamlessly interpolate from the last keyframe back to the first one
+          prev = kfs[kfs.length - 1];
+          next = kfs[0];
+          const timePastLast = clipTime - lastKfTime;
+          const gapDuration = activeWalkClip.duration - lastKfTime;
+          factor = gapDuration > 0 ? timePastLast / gapDuration : 0;
+        } else {
+          for (let i = 0; i < kfs.length - 1; i++) {
+            if (clipTime >= kfs[i].time && clipTime < kfs[i + 1].time) {
+              prev = kfs[i];
+              next = kfs[i + 1];
+              const duration = next.time - prev.time;
+              factor = duration > 0 ? (clipTime - prev.time) / duration : 0;
+              break;
+            }
           }
         }
-
-        const duration = next.time - prev.time;
-        const factor = duration > 0 ? (clipTime - prev.time) / duration : 0;
         const allBones = new Set([...Object.keys(prev.transforms), ...Object.keys(next.transforms)]);
 
         allBones.forEach((bName) => {
@@ -565,18 +576,29 @@ export function Player({
         const kfs = [...activeIdleClip.keyframes].sort((a, b) => a.time - b.time);
 
         let prev = kfs[0];
-        let next = kfs[kfs.length - 1];
+        let next = kfs[0];
+        let factor = 0;
+        
+        const lastKfTime = kfs[kfs.length - 1].time;
 
-        for (let i = 0; i < kfs.length - 1; i++) {
-          if (clipTime >= kfs[i].time && clipTime <= kfs[i + 1].time) {
-            prev = kfs[i];
-            next = kfs[i + 1];
-            break;
+        if (clipTime >= lastKfTime) {
+          // Seamlessly interpolate from the last keyframe back to the first one
+          prev = kfs[kfs.length - 1];
+          next = kfs[0];
+          const timePastLast = clipTime - lastKfTime;
+          const gapDuration = activeIdleClip.duration - lastKfTime;
+          factor = gapDuration > 0 ? timePastLast / gapDuration : 0;
+        } else {
+          for (let i = 0; i < kfs.length - 1; i++) {
+            if (clipTime >= kfs[i].time && clipTime < kfs[i + 1].time) {
+              prev = kfs[i];
+              next = kfs[i + 1];
+              const duration = next.time - prev.time;
+              factor = duration > 0 ? (clipTime - prev.time) / duration : 0;
+              break;
+            }
           }
         }
-
-        const duration = next.time - prev.time;
-        const factor = duration > 0 ? (clipTime - prev.time) / duration : 0;
         const allBones = new Set([...Object.keys(prev.transforms), ...Object.keys(next.transforms)]);
 
         allBones.forEach((bName) => {
