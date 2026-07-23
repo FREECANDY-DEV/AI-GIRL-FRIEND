@@ -448,32 +448,41 @@ export function Player({
           stepSideRef.current = !stepSideRef.current;
 
           if (footprintsGroupRef.current) {
-            const footBoneName = stepSideRef.current ? 'RightFoot' : 'LeftFoot';
-            const footBone = scene.getObjectByName(footBoneName);
+            // Force a wide stance offset to visibly split left and right footprints
+            const sideOffset = stepSideRef.current ? 0.18 : -0.18;
+            const offsetX = Math.cos(bodyAngle) * sideOffset;
+            const offsetZ = -Math.sin(bodyAngle) * sideOffset;
             
-            if (footBone) {
-              const footPos = footBone.getWorldPosition(new THREE.Vector3());
-              const pos = new THREE.Vector3(footPos.x, 0.02, footPos.z);
+            const originPos = rigidBody.current.translation();
+            const pos = new THREE.Vector3(originPos.x, 0.02, originPos.z);
+            
+            // Apply side offset
+            pos.x += offsetX;
+            pos.z += offsetZ;
+            
+            // Shift backwards slightly to align with heels instead of center mass
+            const backOffset = 0.1;
+            pos.x -= Math.sin(bodyAngle) * backOffset;
+            pos.z -= Math.cos(bodyAngle) * backOffset;
 
-              const mesh = new THREE.Mesh(
-                footprintGeo,
-                new THREE.MeshBasicMaterial({ 
-                  color: new THREE.Color('#06b6d4'),
-                  transparent: true, 
-                  opacity: 0.8, 
-                  alphaMap: footprintTex,
-                  depthWrite: false,
-                  blending: THREE.AdditiveBlending,
-                  side: THREE.DoubleSide
-                })
-              );
-              mesh.rotation.x = -Math.PI / 2;
-              mesh.rotation.z = -bodyAngle;
-              // Mirror the left footprint
-              mesh.scale.x = stepSideRef.current ? 1 : -1;
-              mesh.position.copy(pos);
-              footprintsGroupRef.current.add(mesh);
-            }
+            const mesh = new THREE.Mesh(
+              footprintGeo,
+              new THREE.MeshBasicMaterial({ 
+                color: new THREE.Color('#06b6d4'),
+                transparent: true, 
+                opacity: 0.8, 
+                alphaMap: footprintTex,
+                depthWrite: false,
+                blending: THREE.AdditiveBlending,
+                side: THREE.DoubleSide
+              })
+            );
+            mesh.rotation.x = -Math.PI / 2;
+            mesh.rotation.z = -bodyAngle;
+            // Mirror the left footprint texture
+            mesh.scale.x = stepSideRef.current ? 1 : -1;
+            mesh.position.copy(pos);
+            footprintsGroupRef.current.add(mesh);
           }
         }
 
