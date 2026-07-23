@@ -309,7 +309,7 @@ export function Player({
 
     if (isMoving) {
       moveVector.normalize();
-      const speed = 4.2;
+      const speed = 2.2;
       const targetBodyAngle = Math.atan2(moveVector.x, moveVector.z);
 
       let angleDiff = targetBodyAngle - bodyAngle;
@@ -360,7 +360,7 @@ export function Player({
       if (activeWalkClip && activeWalkClip.keyframes.length > 0) {
         // Pause the walk cycle animation while doing a sharp staggered turn
         if (!turnAnticipationRef.current.isTurning) {
-          timeRef.current += delta * 1.1;
+          timeRef.current += delta * 0.8;
         }
         const clipTime = timeRef.current % activeWalkClip.duration;
         const kfs = [...activeWalkClip.keyframes].sort((a, b) => a.time - b.time);
@@ -510,8 +510,12 @@ export function Player({
       isBodyCorrectingRef.current = false;
     }
 
+    if (isMoving) {
+      isBodyCorrectingRef.current = false;
+    }
+
     // Trigger lower body & leg realignment when camera reaches 180° threshold (~170°-180°)
-    if (!isFreeCamera && Math.abs(camDiff) >= Math.PI * 0.92) {
+    if (!isFreeCamera && Math.abs(camDiff) >= Math.PI * 0.92 && !isMoving) {
       isBodyCorrectingRef.current = true;
     }
     if (Math.abs(camDiff) < 0.06) {
