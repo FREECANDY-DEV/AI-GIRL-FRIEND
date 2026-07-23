@@ -521,6 +521,7 @@ export default function App() {
                 activeIdleClip={activeIdleClip}
                 isDragMode={isDragBodyMode}
                 speechMessage={speechMessage}
+                isThinking={isAiThinking}
                 isFreeCamera={isFreeCamera}
                 onToggleHistory={() => setIsHistoryOpen(!isHistoryOpen)}
                 onZoomChange={setIsCameraZoomedClose}
