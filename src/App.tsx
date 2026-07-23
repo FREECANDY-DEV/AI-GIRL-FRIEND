@@ -619,8 +619,8 @@ export default function App() {
                 </mesh>
               </RigidBody>
 
-              {/* Laptop placed on the cube */}
-              <Laptop position={[3, 1.0, 3]} />
+              {/* Laptop placed to fall dynamically onto the cube */}
+              <Laptop position={[3, 3.0, 3]} />
 
               <RigidBody type="fixed">
                 <mesh position={[-3, 0.5, -2]} castShadow={sceneConfig.castShadows} receiveShadow={sceneConfig.castShadows}>

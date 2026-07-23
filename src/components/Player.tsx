@@ -949,7 +949,10 @@ export function Player({
       }
     }
 
-    // Fallback for Torso, Head, Shoulders: Standard directional pull
+    // Fallback for Torso, Head: Standard directional pull
+    // Prevent dragging shoulders as it breaks the mesh topology
+    if (bName.includes('Shoulder')) return;
+
     const boneWorldPos = boneObj.getWorldPosition(new THREE.Vector3());
     const pullDir = targetPos.clone().sub(boneWorldPos).normalize();
 
@@ -1015,9 +1018,14 @@ export function Player({
           const clickedBone = scene.getObjectByName(closestBoneName) as THREE.Bone | null;
           if (clickedBone) {
             // Instantly bump the bone backwards relative to camera view
-            // Using slerp with a fast sudden impulse
+            // Use smaller force for core/shoulder bones so it doesn't twist the mesh inside out
+            let forceMagnitude = 0.5;
+            if (closestBoneName.includes('Shoulder') || closestBoneName.includes('Spine') || closestBoneName.includes('Neck') || closestBoneName.includes('Head')) {
+              forceMagnitude = 0.1;
+            }
+            
             const pushAxis = new THREE.Vector3(1, 0, 0); // Local axis that bends limbs backwards
-            const pushForce = new THREE.Quaternion().setFromAxisAngle(pushAxis, 0.5);
+            const pushForce = new THREE.Quaternion().setFromAxisAngle(pushAxis, forceMagnitude);
             clickedBone.quaternion.multiply(pushForce);
 
             // Also bump the middle joint if it's an IK chain (makes limbs flinch naturally)
