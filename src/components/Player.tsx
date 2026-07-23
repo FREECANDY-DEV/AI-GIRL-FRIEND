@@ -64,6 +64,8 @@ export function Player({
   const leftArm = useRef<THREE.Bone | null>(null);
   const rightForeArm = useRef<THREE.Bone | null>(null);
   const leftForeArm = useRef<THREE.Bone | null>(null);
+  const rightHand = useRef<THREE.Bone | null>(null);
+  const leftHand = useRef<THREE.Bone | null>(null);
 
   const timeRef = useRef(0);
   const idleTimeRef = useRef(0);
@@ -188,6 +190,8 @@ export function Player({
           if (bone.name === 'LeftArm') leftArm.current = bone;
           if (bone.name === 'RightForeArm') rightForeArm.current = bone;
           if (bone.name === 'LeftForeArm') leftForeArm.current = bone;
+          if (bone.name === 'RightHand') rightHand.current = bone;
+          if (bone.name === 'LeftHand') leftHand.current = bone;
         }
       });
     }
@@ -552,10 +556,12 @@ export function Player({
         if (!isRightArmDragged) {
           setBoneRot(rightArm.current, 0, shoulderYaw * 0.25, armSpr, lerpSpeed);
           setBoneRot(rightForeArm.current, 0.1, 0, 0, lerpSpeed);
+          setBoneRot(rightHand.current, 0, 0, 0, lerpSpeed);
         }
         if (!isLeftArmDragged) {
           setBoneRot(leftArm.current, 0, shoulderYaw * 0.25, -armSpr, lerpSpeed);
           setBoneRot(leftForeArm.current, 0.1, 0, 0, lerpSpeed);
+          setBoneRot(leftHand.current, 0, 0, 0, lerpSpeed);
         }
 
         // Apply any active custom standing pose bone rotations
@@ -856,7 +862,6 @@ export function Player({
         dispose={null}
         position={[0, 0, 0]}
         onPointerDown={(e) => {
-          if (!isDragMode) return;
           e.stopPropagation();
 
           const point = e.point;
@@ -886,6 +891,26 @@ export function Player({
               });
             }
           }
+
+          // Apply physical poke/flinch reaction
+          const clickedBone = scene.getObjectByName(closestBoneName) as THREE.Bone | null;
+          if (clickedBone) {
+            // Instantly bump the bone backwards relative to camera view
+            // Using slerp with a fast sudden impulse
+            const pushAxis = new THREE.Vector3(1, 0, 0); // Local axis that bends limbs backwards
+            const pushForce = new THREE.Quaternion().setFromAxisAngle(pushAxis, 0.5);
+            clickedBone.quaternion.multiply(pushForce);
+
+            // Also bump the middle joint if it's an IK chain (makes limbs flinch naturally)
+            if (closestBoneName.includes('Hand') || closestBoneName.includes('Foot')) {
+              const midName = closestBoneName.replace('Hand', 'ForeArm').replace('Foot', 'Leg');
+              const midBone = scene.getObjectByName(midName) as THREE.Bone | null;
+              if (midBone) midBone.quaternion.multiply(pushForce);
+            }
+          }
+
+          // If not in drag mode, we just poke and return so it smoothly recovers!
+          if (!isDragMode) return;
 
           isDraggingBodyPartRef.current = true;
           draggedBoneNameRef.current = closestBoneName;
