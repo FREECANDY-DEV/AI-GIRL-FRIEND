@@ -863,43 +863,45 @@ export function Player({
         const spine1Target = new THREE.Quaternion().setFromEuler(new THREE.Euler(spine1.current.rotation.x, spine1Yaw, spine1.current.rotation.z, 'YXZ'));
         spine1.current.quaternion.slerp(spine1Target, 4 * delta);
       } else if (isFreeCamera && head.current && neck.current && spine2.current && !isMoving) {
-        // In free camera, make the head and eyes follow the mouse cursor!
-        // Calculate target angles based on mouse pointer
-        const mouseX = state.pointer.x;
-        const mouseY = state.pointer.y;
+        // In free camera, make the head and eyes follow the exact 3D mouse cursor location!
+        // Unproject the 2D mouse cursor into a 3D point far away in the world
+        const mouseWorld = new THREE.Vector3(state.pointer.x, state.pointer.y, 0.99).unproject(camera);
         
-        // To make it look at the mouse accurately regardless of camera angle,
-        // we calculate the angle from the character's face to the camera,
-        // then offset it by the mouse position.
-        const charPos = group.current.getWorldPosition(new THREE.Vector3());
-        const charToCam = camera.position.clone().sub(charPos).normalize();
-        const camYaw = Math.atan2(charToCam.x, charToCam.z);
+        // Calculate the vector from the character's head to that 3D mouse point
+        const headPos = head.current.getWorldPosition(new THREE.Vector3());
+        const headToMouse = mouseWorld.sub(headPos).normalize();
         
-        // Calculate the relative yaw from the character's body rotation
+        // Calculate the world yaw and pitch required to look at the mouse
+        const targetWorldYaw = Math.atan2(headToMouse.x, headToMouse.z);
+        const targetWorldPitch = Math.asin(headToMouse.y);
+        
+        // Convert world yaw to character-local yaw
         const charBodyYaw = group.current?.rotation.y || 0;
-        let relativeYaw = camYaw - charBodyYaw;
-        while (relativeYaw > Math.PI) relativeYaw -= Math.PI * 2;
-        while (relativeYaw < -Math.PI) relativeYaw += Math.PI * 2;
+        let localYaw = targetWorldYaw - charBodyYaw;
         
-        // Add mouse offsets (inverted so moving right makes them look right)
-        const finalHeadYaw = THREE.MathUtils.clamp(relativeYaw - mouseX * 0.8, -Math.PI / 2, Math.PI / 2);
-        const finalHeadPitch = THREE.MathUtils.clamp(-mouseY * 0.5, -0.5, 0.5);
-
-        const headTarget = new THREE.Quaternion().setFromEuler(new THREE.Euler(finalHeadPitch, finalHeadYaw * 0.6, head.current.rotation.z, 'YXZ'));
-        head.current.quaternion.slerp(headTarget, 10 * delta);
-
-        const neckTarget = new THREE.Quaternion().setFromEuler(new THREE.Euler(finalHeadPitch * 0.5, finalHeadYaw * 0.4, neck.current.rotation.z, 'YXZ'));
-        neck.current.quaternion.slerp(neckTarget, 8 * delta);
+        // Normalize angle to -PI to PI
+        while (localYaw > Math.PI) localYaw -= Math.PI * 2;
+        while (localYaw < -Math.PI) localYaw += Math.PI * 2;
         
-        // Make the eyes track the mouse even more precisely!
+        // Clamp to prevent breaking the neck (limits to about 70 degrees left/right)
+        const finalHeadYaw = THREE.MathUtils.clamp(localYaw, -Math.PI / 2.5, Math.PI / 2.5);
+        const finalHeadPitch = THREE.MathUtils.clamp(targetWorldPitch, -0.6, 0.6);
+
+        const headTarget = new THREE.Quaternion().setFromEuler(new THREE.Euler(-finalHeadPitch * 0.8, finalHeadYaw * 0.6, head.current.rotation.z, 'YXZ'));
+        head.current.quaternion.slerp(headTarget, 12 * delta);
+
+        const neckTarget = new THREE.Quaternion().setFromEuler(new THREE.Euler(-finalHeadPitch * 0.4, finalHeadYaw * 0.4, neck.current.rotation.z, 'YXZ'));
+        neck.current.quaternion.slerp(neckTarget, 10 * delta);
+        
+        // Make the eyes track the mouse perfectly
         if (rightEye.current && leftEye.current) {
-          // Eyes move further than the head to "look" at the cursor
-          const eyeTargetPitch = THREE.MathUtils.clamp(-mouseY * 0.8, -0.6, 0.6);
-          const eyeTargetYaw = THREE.MathUtils.clamp(relativeYaw - mouseX * 1.2, -0.8, 0.8);
+          // Eyes can rotate slightly further to pinpoint the exact cursor
+          const eyeTargetPitch = THREE.MathUtils.clamp(-targetWorldPitch * 1.5, -0.8, 0.8);
+          const eyeTargetYaw = THREE.MathUtils.clamp(localYaw * 1.2, -0.9, 0.9);
           
           const eyeTarget = new THREE.Quaternion().setFromEuler(new THREE.Euler(eyeTargetPitch, eyeTargetYaw, 0, 'YXZ'));
-          rightEye.current.quaternion.slerp(eyeTarget, 15 * delta);
-          leftEye.current.quaternion.slerp(eyeTarget, 15 * delta);
+          rightEye.current.quaternion.slerp(eyeTarget, 20 * delta);
+          leftEye.current.quaternion.slerp(eyeTarget, 20 * delta);
         }
       }
 
@@ -1032,8 +1034,8 @@ export function Player({
       if (isFreeCamera && !hasInitFreeCamRef.current) {
         hasInitOtsCamRef.current = false;
         // Smoothly position camera directly in front of model face at eye level
-        const targetPos = new THREE.Vector3(0, 1.45, 1.6);
-        const targetLookAt = new THREE.Vector3(0, 1.45, 0);
+        const targetPos = new THREE.Vector3(0, 1.50, 1.6);
+        const targetLookAt = new THREE.Vector3(0, 1.50, 0);
         
         camera.position.lerp(targetPos, Math.min(1, 4 * delta));
         orbitControlsRef.current.target.lerp(targetLookAt, Math.min(1, 6 * delta));
@@ -1051,7 +1053,7 @@ export function Player({
           const radius = 2.5;
           const camX = playerWorldPos.x + Math.sin(charYaw + Math.PI) * radius;
           const camZ = playerWorldPos.z + Math.cos(charYaw + Math.PI) * radius;
-          const targetCamPos = new THREE.Vector3(camX, playerWorldPos.y + 1.45, camZ);
+          const targetCamPos = new THREE.Vector3(camX, playerWorldPos.y + 1.50, camZ);
           
           camera.position.lerp(targetCamPos, Math.min(1, 4 * delta));
           
@@ -1068,7 +1070,7 @@ export function Player({
         // This puts the character on the left side of the screen (Over The Right Shoulder)
         const lookAtTarget = playerWorldPos
           .clone()
-          .add(new THREE.Vector3(0, 1.45 + shakeY, 0))
+          .add(new THREE.Vector3(0, 1.50 + shakeY, 0))
           .add(camRight.multiplyScalar(0.4 + shakeX));
 
         if (!hasInitOtsCamRef.current) {
