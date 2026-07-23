@@ -72,6 +72,21 @@ export default function App() {
     mode: 'pose',
   });
 
+  const [sceneConfig, setSceneConfig] = useState<SceneConfig>(() => {
+    try {
+      const saved = localStorage.getItem('lab_scene_config');
+      return saved ? JSON.parse(saved) : DEFAULT_SCENE_CONFIG;
+    } catch {
+      return DEFAULT_SCENE_CONFIG;
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('lab_scene_config', JSON.stringify(sceneConfig));
+  }, [sceneConfig]);
+
+  const [isSceneSettingsOpen, setIsSceneSettingsOpen] = useState(false);
+
   // Standing Pose state (Persisted in LocalStorage)
   const [standingPose, setStandingPose] = useState<StandingPoseConfig>(() => {
     try {
@@ -486,6 +501,19 @@ export default function App() {
                 <Eye size={18} className={isFreeCamera ? 'text-white' : 'text-blue-400'} />
               </button>
 
+              {/* Scene Settings Button */}
+              <button
+                onClick={() => setIsSceneSettingsOpen(!isSceneSettingsOpen)}
+                className={`p-2.5 rounded-xl border shadow-xl transition-all transform hover:scale-105 active:scale-95 cursor-pointer ${
+                  isSceneSettingsOpen
+                    ? 'bg-blue-600 text-white border-blue-400 ring-2 ring-blue-500/40 shadow-blue-500/20'
+                    : 'bg-slate-900/90 text-slate-300 hover:bg-slate-800 border-slate-800 backdrop-blur-md'
+                }`}
+                title="Scene & Lighting Settings"
+              >
+                <Wand2 size={18} className={isSceneSettingsOpen ? 'text-white' : 'text-blue-400'} />
+              </button>
+
               {/* Drag Body Part Mode Minimalist Icon Button */}
               <button
                 onClick={() => setIsDragBodyMode(!isDragBodyMode)}
@@ -521,10 +549,10 @@ export default function App() {
           <Stars radius={100} depth={50} count={6000} factor={4} saturation={0} fade speed={1.5} />
 
           {/* Balanced Night Ambient Light */}
-          <ambientLight intensity={0.45} color="#e0e7ff" />
+          <ambientLight intensity={sceneConfig.ambientLightIntensity} color="#e0e7ff" />
 
           {/* Moonlight Directional Sunlight */}
-          <directionalLight position={[-10, 18, -10]} intensity={0.6} color="#38bdf8" castShadow shadow-mapSize={[1024, 1024]} />
+          <directionalLight position={[-10, 18, -10]} intensity={sceneConfig.directionalLightIntensity} color="#38bdf8" castShadow shadow-mapSize={[1024, 1024]} />
 
           <OrbitControls
             ref={orbitControlsRef}
@@ -545,7 +573,7 @@ export default function App() {
 
               <Player
                 joystickMove={joystickMove}
-                showSkeleton={showSkeleton}
+                showSkeleton={sceneConfig.showSkeleton}
                 orbitControlsRef={orbitControlsRef}
                 standingPose={finalStandingPose}
                 activeWalkClip={activeWalkClip}
@@ -607,6 +635,12 @@ export default function App() {
             fadeStrength={1}
             infiniteGrid
           />
+          <EffectComposer>
+            <HueSaturation saturation={sceneConfig.saturation - 1.0} />
+            <BrightnessContrast brightness={sceneConfig.brightness} contrast={sceneConfig.contrast - 1.0} />
+            <Noise opacity={sceneConfig.filmGrain} />
+            <Bloom intensity={sceneConfig.bloomIntensity} luminanceThreshold={0.8} />
+          </EffectComposer>
         </Canvas>
 
         {/* Ultra-Intense Cinematic Film Grain & Vignette Overlay (Permanent Default) */}
@@ -802,6 +836,15 @@ export default function App() {
             />
           </div>
         </aside>
+      )}
+
+      {/* Scene Settings Modal/Sidebar */}
+      {isSceneSettingsOpen && (
+        <SceneSettingsPanel
+          config={sceneConfig}
+          onChange={setSceneConfig}
+          onClose={() => setIsSceneSettingsOpen(false)}
+        />
       )}
     </div>
   );
