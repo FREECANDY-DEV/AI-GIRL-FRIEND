@@ -73,7 +73,7 @@ export default function App() {
 
   const [sceneConfig, setSceneConfig] = useState<SceneConfig>(() => {
     try {
-      const saved = localStorage.getItem('lab_scene_config_v2');
+      const saved = localStorage.getItem('lab_scene_config_v3');
       return saved ? { ...DEFAULT_SCENE_CONFIG, ...JSON.parse(saved) } : DEFAULT_SCENE_CONFIG;
     } catch {
       return DEFAULT_SCENE_CONFIG;
@@ -81,7 +81,7 @@ export default function App() {
   });
 
   useEffect(() => {
-    localStorage.setItem('lab_scene_config_v2', JSON.stringify(sceneConfig));
+    localStorage.setItem('lab_scene_config_v3', JSON.stringify(sceneConfig));
   }, [sceneConfig]);
 
   const [isSceneSettingsOpen, setIsSceneSettingsOpen] = useState(false);
@@ -542,16 +542,22 @@ export default function App() {
           )}
         </div>
 
-        <Canvas camera={{ position: [0, 1.45, 1.6], fov: 48 }} shadows>
-          <color attach="background" args={['#070a14']} />
+        <Canvas camera={{ position: [0, 1.45, 1.6], fov: sceneConfig.cameraFov }} shadows>
+          <color attach="background" args={[sceneConfig.backgroundColor]} />
           {/* Night Sky Background Stars */}
-          <Stars radius={100} depth={50} count={6000} factor={4} saturation={0} fade speed={1.5} />
+          <Stars radius={100} depth={50} count={sceneConfig.starCount} factor={4} saturation={0} fade speed={sceneConfig.starSpeed} />
 
           {/* Balanced Night Ambient Light */}
-          <ambientLight intensity={sceneConfig.ambientLightIntensity} color="#e0e7ff" />
+          <ambientLight intensity={sceneConfig.ambientLightIntensity} color={sceneConfig.ambientLightColor} />
 
           {/* Moonlight Directional Sunlight */}
-          <directionalLight position={[-10, 18, -10]} intensity={sceneConfig.directionalLightIntensity} color="#38bdf8" castShadow shadow-mapSize={[1024, 1024]} />
+          <directionalLight 
+            position={[sceneConfig.directionalLightPositionX, sceneConfig.directionalLightPositionY, sceneConfig.directionalLightPositionZ]} 
+            intensity={sceneConfig.directionalLightIntensity} 
+            color={sceneConfig.directionalLightColor} 
+            castShadow 
+            shadow-mapSize={[1024, 1024]} 
+          />
 
           <OrbitControls
             ref={orbitControlsRef}
@@ -563,6 +569,8 @@ export default function App() {
             minDistance={0.6}
             maxDistance={25}
             makeDefault
+            autoRotate={sceneConfig.enableAutoRotate}
+            autoRotateSpeed={sceneConfig.autoRotateSpeed}
           />
 
           <Suspense fallback={null}>

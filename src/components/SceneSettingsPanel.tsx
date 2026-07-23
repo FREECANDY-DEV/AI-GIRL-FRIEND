@@ -1,5 +1,5 @@
 import React from 'react';
-import { Settings2, X, Sun, Moon, Sparkles, SlidersHorizontal, Droplets, Bone } from 'lucide-react';
+import { Settings2, X, Sun, Moon, Sparkles, SlidersHorizontal, Droplets, Bone, Camera } from 'lucide-react';
 import { SceneConfig, DEFAULT_SCENE_CONFIG } from '../types/scene';
 
 interface SceneSettingsPanelProps {
@@ -9,7 +9,7 @@ interface SceneSettingsPanelProps {
 }
 
 export function SceneSettingsPanel({ config, onChange, onClose }: SceneSettingsPanelProps) {
-  const updateField = (field: keyof SceneConfig, value: number | boolean) => {
+  const updateField = (field: keyof SceneConfig, value: number | boolean | string) => {
     onChange({ ...config, [field]: value });
   };
 
@@ -52,21 +52,93 @@ export function SceneSettingsPanel({ config, onChange, onClose }: SceneSettingsP
           </label>
         </section>
 
-        {/* Lighting */}
+        {/* Camera Controls */}
         <section className="space-y-4">
           <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-            <Sun size={12} /> Environment Lighting
+            <Camera size={12} /> Camera & Orbit
           </h3>
-          
+
           <div className="space-y-1">
             <div className="flex justify-between text-[11px]">
-              <span>Ambient Light</span>
+              <span>Field of View (FOV)</span>
+              <span className="font-mono text-emerald-400">{config.cameraFov}</span>
+            </div>
+            <input
+              type="range"
+              min="20"
+              max="90"
+              step="1"
+              value={config.cameraFov}
+              onChange={(e) => updateField('cameraFov', parseInt(e.target.value))}
+              className="w-full accent-emerald-500"
+            />
+          </div>
+
+          <label className="flex items-center gap-2 text-[11px] cursor-pointer">
+            <input
+              type="checkbox"
+              checked={config.enableAutoRotate}
+              onChange={(e) => updateField('enableAutoRotate', e.target.checked)}
+              className="accent-emerald-500"
+            />
+            Enable Auto-Rotate
+          </label>
+
+          {config.enableAutoRotate && (
+            <div className="space-y-1 pl-4 border-l border-slate-800">
+              <div className="flex justify-between text-[11px]">
+                <span>Rotate Speed</span>
+                <span className="font-mono text-emerald-400">{config.autoRotateSpeed.toFixed(1)}</span>
+              </div>
+              <input
+                type="range"
+                min="-5"
+                max="5"
+                step="0.5"
+                value={config.autoRotateSpeed}
+                onChange={(e) => updateField('autoRotateSpeed', parseFloat(e.target.value))}
+                className="w-full accent-emerald-500"
+              />
+            </div>
+          )}
+        </section>
+
+        {/* Global Lighting */}
+        <section className="space-y-4">
+          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+            <Sun size={12} /> Ambient & Sky
+          </h3>
+
+          <div className="space-y-2">
+            <div className="flex justify-between text-[11px] items-center">
+              <span>Background Color</span>
+              <input
+                type="color"
+                value={config.backgroundColor}
+                onChange={(e) => updateField('backgroundColor', e.target.value)}
+                className="w-6 h-6 rounded cursor-pointer bg-transparent border-0 p-0"
+              />
+            </div>
+            <div className="flex justify-between text-[11px] items-center">
+              <span>Ambient Color</span>
+              <input
+                type="color"
+                value={config.ambientLightColor}
+                onChange={(e) => updateField('ambientLightColor', e.target.value)}
+                className="w-6 h-6 rounded cursor-pointer bg-transparent border-0 p-0"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <div className="flex justify-between text-[11px]">
+              <span>Ambient Intensity</span>
               <span className="font-mono text-emerald-400">{config.ambientLightIntensity.toFixed(2)}</span>
             </div>
             <input
               type="range"
               min="0"
-              max="3"
+              max="2"
               step="0.05"
               value={config.ambientLightIntensity}
               onChange={(e) => updateField('ambientLightIntensity', parseFloat(e.target.value))}
@@ -76,7 +148,56 @@ export function SceneSettingsPanel({ config, onChange, onClose }: SceneSettingsP
 
           <div className="space-y-1">
             <div className="flex justify-between text-[11px]">
-              <span>Directional Light</span>
+              <span>Star Count</span>
+              <span className="font-mono text-emerald-400">{config.starCount}</span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="15000"
+              step="500"
+              value={config.starCount}
+              onChange={(e) => updateField('starCount', parseInt(e.target.value))}
+              className="w-full accent-emerald-500"
+            />
+          </div>
+          
+          <div className="space-y-1">
+            <div className="flex justify-between text-[11px]">
+              <span>Star Speed</span>
+              <span className="font-mono text-emerald-400">{config.starSpeed.toFixed(1)}</span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="10"
+              step="0.1"
+              value={config.starSpeed}
+              onChange={(e) => updateField('starSpeed', parseFloat(e.target.value))}
+              className="w-full accent-emerald-500"
+            />
+          </div>
+        </section>
+
+        {/* Directional Light */}
+        <section className="space-y-4">
+          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+            <Sun size={12} /> Directional Sun
+          </h3>
+
+          <div className="flex justify-between text-[11px] items-center">
+            <span>Sun Color</span>
+            <input
+              type="color"
+              value={config.directionalLightColor}
+              onChange={(e) => updateField('directionalLightColor', e.target.value)}
+              className="w-6 h-6 rounded cursor-pointer bg-transparent border-0 p-0"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <div className="flex justify-between text-[11px]">
+              <span>Sun Intensity</span>
               <span className="font-mono text-emerald-400">{config.directionalLightIntensity.toFixed(2)}</span>
             </div>
             <input
@@ -88,6 +209,36 @@ export function SceneSettingsPanel({ config, onChange, onClose }: SceneSettingsP
               onChange={(e) => updateField('directionalLightIntensity', parseFloat(e.target.value))}
               className="w-full accent-emerald-500"
             />
+          </div>
+
+          <div className="grid grid-cols-3 gap-2">
+            <div className="space-y-1">
+              <div className="text-[10px] text-slate-400">Pos X</div>
+              <input
+                type="number"
+                value={config.directionalLightPositionX}
+                onChange={(e) => updateField('directionalLightPositionX', parseFloat(e.target.value) || 0)}
+                className="w-full bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-[11px] focus:border-emerald-500 outline-none"
+              />
+            </div>
+            <div className="space-y-1">
+              <div className="text-[10px] text-slate-400">Pos Y</div>
+              <input
+                type="number"
+                value={config.directionalLightPositionY}
+                onChange={(e) => updateField('directionalLightPositionY', parseFloat(e.target.value) || 0)}
+                className="w-full bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-[11px] focus:border-emerald-500 outline-none"
+              />
+            </div>
+            <div className="space-y-1">
+              <div className="text-[10px] text-slate-400">Pos Z</div>
+              <input
+                type="number"
+                value={config.directionalLightPositionZ}
+                onChange={(e) => updateField('directionalLightPositionZ', parseFloat(e.target.value) || 0)}
+                className="w-full bg-slate-950 border border-slate-700 rounded px-1.5 py-1 text-[11px] focus:border-emerald-500 outline-none"
+              />
+            </div>
           </div>
         </section>
       </div>
