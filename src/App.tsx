@@ -4,7 +4,7 @@
  */
 
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Grid, ContactShadows, Stars } from '@react-three/drei';
+import { OrbitControls, Grid, ContactShadows, Stars, Sparkles as DreiSparkles } from '@react-three/drei';
 import { Physics, RigidBody, CuboidCollider } from '@react-three/rapier';
 import { useState, useEffect, useRef, Suspense } from 'react';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
@@ -598,9 +598,16 @@ export default function App() {
           }}
         >
           <Canvas camera={{ position: [0, 1.45, 1.6], fov: sceneConfig.cameraFov }} shadows>
-          <color attach="background" args={[sceneConfig.backgroundColor]} />
-          {/* Night Sky Background Stars */}
-          <Stars radius={100} depth={50} count={sceneConfig.starCount} factor={4} saturation={0} fade speed={sceneConfig.starSpeed} />
+            
+            {/* Environment & Background */}
+            <color attach="background" args={[sceneConfig.backgroundColor]} />
+            
+            {/* Floating Random Particles */}
+            <DreiSparkles count={400} scale={12} size={2} speed={0.4} opacity={0.3} color="#ffffff" />
+            <DreiSparkles count={200} scale={15} size={3} speed={0.2} opacity={0.1} color="#aaddff" />
+            
+            {/* Night Sky Background Stars */}
+            <Stars radius={100} depth={50} count={sceneConfig.starCount} factor={4} saturation={0} fade speed={sceneConfig.starSpeed} />
 
           {/* Balanced Night Ambient Light */}
           <ambientLight intensity={sceneConfig.ambientLightIntensity} color={sceneConfig.ambientLightColor} />
