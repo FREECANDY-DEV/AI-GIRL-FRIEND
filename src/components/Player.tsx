@@ -119,7 +119,7 @@ export function Player({
   const braceWeightsRef = useRef({ left: 0, right: 0 });
 
   // Footprints system
-  const footprintsGroupRef = useRef<THREE.Group>(null);
+  const footprintsGroupRef = useRef<THREE.Group>(new THREE.Group());
   const lastStepDistRef = useRef(0);
   const stepSideRef = useRef(false);
   const footprintGeo = useMemo(() => {
@@ -127,6 +127,19 @@ export function Player({
     geo.scale(1, 1.8, 1);
     return geo;
   }, []);
+
+  useEffect(() => {
+    const group = footprintsGroupRef.current;
+    if (scene) {
+      scene.add(group);
+    }
+    return () => {
+      if (scene) {
+        scene.remove(group);
+      }
+    };
+  }, [scene]);
+
 
   const applyBraceIK = (bName: string, deltaQ: THREE.Quaternion) => {
     const lw = braceWeightsRef.current.left;
@@ -1171,8 +1184,7 @@ export function Player({
     >
       <CapsuleCollider args={[0.5, 0.3]} position={[0, 0.8, 0]} />
 
-      {/* Footprints Group - Placed at world origin, not affected by character rotation */}
-      <group ref={footprintsGroupRef} position={[0, -0.85, 0]} />
+
 
       <group
         ref={group}
