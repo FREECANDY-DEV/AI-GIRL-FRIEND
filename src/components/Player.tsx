@@ -957,7 +957,14 @@ export function Player({
 
     // 3. Over-The-Right-Shoulder (OTS) Camera View & Camera Shake Controller (OrbitControls Compatible)
     const currentPos = rigidBody.current.translation();
-    const playerWorldPos = new THREE.Vector3(currentPos.x, currentPos.y, currentPos.z);
+    // Use the visually interpolated position of the model group, NOT the raw physics body,
+    // to prevent high-frequency physics tick micro-stuttering on high refresh rate screens!
+    const playerWorldPos = new THREE.Vector3();
+    if (group.current) {
+      group.current.getWorldPosition(playerWorldPos);
+    } else {
+      playerWorldPos.set(currentPos.x, currentPos.y, currentPos.z);
+    }
 
     // Calculate Organic Camera Shake (Breathing vs Walking Footsteps)
     let shakeY = 0;
@@ -1025,7 +1032,9 @@ export function Player({
         
         // Auto-follow camera: rotate camera to align with movement direction always
         if (isMoving) {
-          const offset = camera.position.clone().sub(lookAtTarget);
+          // Use orbitControls target instead of lookAtTarget to prevent fighting OrbitControls internal state
+          const target = orbitControlsRef.current.target;
+          const offset = camera.position.clone().sub(target);
           const currentAzimuth = Math.atan2(offset.x, offset.z);
           
           const moveAzimuth = Math.atan2(moveVector.x, moveVector.z);
@@ -1039,18 +1048,16 @@ export function Player({
           const rotationSpeed = 3.5 * delta * Math.min(1, Math.abs(joystickMove.x) + Math.abs(joystickMove.y));
           
           if (Math.abs(deltaAzimuth) > 0.01) {
-            const newAzimuth = currentAzimuth + deltaAzimuth * rotationSpeed;
-            const radius = Math.sqrt(offset.x * offset.x + offset.z * offset.z);
+            const currentPolar = orbitControlsRef.current.getPolarAngle();
+            const currentDist = orbitControlsRef.current.getDistance();
             
-            camera.position.x = lookAtTarget.x + Math.sin(newAzimuth) * radius;
-            camera.position.z = lookAtTarget.z + Math.cos(newAzimuth) * radius;
+            const newAzimuth = currentAzimuth + deltaAzimuth * rotationSpeed;
+            
+            // Set spherical relative to the CURRENT target
+            const sph = new THREE.Spherical(currentDist, currentPolar, newAzimuth);
+            camera.position.copy(target).add(new THREE.Vector3().setFromSpherical(sph));
+            orbitControlsRef.current.update();
           }
-        }
-        
-        // Ensure the camera doesn't zoom too far out in OTS mode
-        if (orbitControlsRef.current.getDistance() > 3.0) {
-           const dir = camera.position.clone().sub(lookAtTarget).normalize();
-           camera.position.copy(lookAtTarget.clone().add(dir.multiplyScalar(3.0)));
         }
 
         orbitControlsRef.current.update();
