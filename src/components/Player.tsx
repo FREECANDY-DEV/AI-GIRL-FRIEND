@@ -79,6 +79,8 @@ export function Player({
 
   const timeRef = useRef(0);
   const idleTimeRef = useRef(0);
+  const clipTimeRef = useRef(0);
+  const prevClipIdRef = useRef<string | null>(null);
   const initialQuaternions = useRef<Map<string, THREE.Quaternion>>(new Map());
   const initialPositions = useRef<Map<string, THREE.Vector3>>(new Map());
   const bonesMapRef = useRef<Map<string, THREE.Bone>>(new Map());
@@ -724,9 +726,16 @@ export function Player({
     }
 
     if (!isMoving) {
+      const prevClipId = prevClipIdRef.current;
+      if (activeIdleClip && activeIdleClip.id !== prevClipId) {
+        clipTimeRef.current = 0; // Reset clip time when switching animations
+        prevClipIdRef.current = activeIdleClip.id;
+      }
+
       if (activeIdleClip && activeIdleClip.keyframes.length > 0) {
-        idleTimeRef.current += delta * 1.0;
-        const clipTime = idleTimeRef.current % activeIdleClip.duration;
+        // Use a dedicated clip time ref so we don't interfere with the breathing sine wave
+        clipTimeRef.current += delta * 1.0;
+        const clipTime = clipTimeRef.current % activeIdleClip.duration;
         const kfs = [...activeIdleClip.keyframes].sort((a, b) => a.time - b.time);
 
         let prev = kfs[0];
@@ -1037,10 +1046,10 @@ export function Player({
         const targetPos = new THREE.Vector3(0, 1.50, 1.6);
         const targetLookAt = new THREE.Vector3(0, 1.50, 0);
         
-        camera.position.lerp(targetPos, Math.min(1, 4 * delta));
-        orbitControlsRef.current.target.lerp(targetLookAt, Math.min(1, 6 * delta));
+        camera.position.lerp(targetPos, Math.min(1, 1.5 * delta));
+        orbitControlsRef.current.target.lerp(targetLookAt, Math.min(1, 1.5 * delta));
         
-        if (camera.position.distanceToSquared(targetPos) < 0.01) {
+        if (camera.position.distanceToSquared(targetPos) < 0.05) {
           hasInitFreeCamRef.current = true;
         }
         orbitControlsRef.current.update();
@@ -1055,7 +1064,7 @@ export function Player({
           const camZ = playerWorldPos.z + Math.cos(charYaw + Math.PI) * radius;
           const targetCamPos = new THREE.Vector3(camX, playerWorldPos.y + 1.50, camZ);
           
-          camera.position.lerp(targetCamPos, Math.min(1, 4 * delta));
+          camera.position.lerp(targetCamPos, Math.min(1, 1.5 * delta));
           
           if (camera.position.distanceToSquared(targetCamPos) < 0.05) {
             hasInitOtsCamRef.current = true;
