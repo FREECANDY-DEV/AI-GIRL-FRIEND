@@ -555,6 +555,40 @@ export function Player({
       resolveLimbWrappingCollisions(bonesMapRef.current, draggedBoneNameRef.current);
     }
 
+    // 2.5 Dynamic Lip Sync for TTS Speech
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      const isSpeaking = window.speechSynthesis.speaking && speechMessage;
+      const headMesh = scene.getObjectByName('Wolf3D_Head') as THREE.Mesh;
+      const teethMesh = scene.getObjectByName('Wolf3D_Teeth') as THREE.Mesh;
+      
+      if (headMesh && headMesh.morphTargetDictionary && headMesh.morphTargetInfluences) {
+        const jawOpenIdx = headMesh.morphTargetDictionary['jawOpen'];
+        const mouthOpenIdx = headMesh.morphTargetDictionary['mouthOpen'];
+        
+        let targetIntensity = 0;
+        if (isSpeaking) {
+          // Create an organic, randomized fast flapping value based on time to simulate phonemes
+          const t = state.clock.elapsedTime;
+          const flap = (Math.sin(t * 20) + Math.cos(t * 13)) * 0.5 + 0.5; // 0 to 1
+          targetIntensity = flap * (0.3 + Math.random() * 0.4);
+        }
+
+        if (jawOpenIdx !== undefined) {
+          headMesh.morphTargetInfluences[jawOpenIdx] = THREE.MathUtils.lerp(headMesh.morphTargetInfluences[jawOpenIdx], targetIntensity, 0.3);
+        }
+        if (mouthOpenIdx !== undefined) {
+          headMesh.morphTargetInfluences[mouthOpenIdx] = THREE.MathUtils.lerp(headMesh.morphTargetInfluences[mouthOpenIdx], targetIntensity * 0.6, 0.3);
+        }
+        
+        if (teethMesh && teethMesh.morphTargetDictionary && teethMesh.morphTargetInfluences) {
+           const tJawOpen = teethMesh.morphTargetDictionary['jawOpen'];
+           if (tJawOpen !== undefined) {
+             teethMesh.morphTargetInfluences[tJawOpen] = THREE.MathUtils.lerp(teethMesh.morphTargetInfluences[tJawOpen], targetIntensity, 0.3);
+           }
+        }
+      }
+    }
+
     // 3. Over-The-Right-Shoulder (OTS) Camera View & Camera Shake Controller (OrbitControls Compatible)
     const currentPos = rigidBody.current.translation();
     const playerWorldPos = new THREE.Vector3(currentPos.x, currentPos.y, currentPos.z);
