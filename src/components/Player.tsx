@@ -1027,8 +1027,13 @@ export function Player({
           .add(new THREE.Vector3(0, 1.45 + shakeY, 0))
           .add(camRight.multiplyScalar(0.4 + shakeX));
 
-        // Smoothly move the orbit target
-        orbitControlsRef.current.target.lerp(lookAtTarget, Math.min(1, 12 * delta));
+        if (!hasInitOtsCamRef.current) {
+          orbitControlsRef.current.target.lerp(lookAtTarget, Math.min(1, 6 * delta));
+        } else {
+          // Snap the orbit target exactly to the character's smooth interpolated position
+          // This completely eliminates the "zooming out" lag illusion when walking forward!
+          orbitControlsRef.current.target.copy(lookAtTarget);
+        }
         
         // Auto-follow camera: rotate camera to align with movement direction always
         if (isMoving) {
