@@ -1,4 +1,4 @@
-import { X, Terminal, Folder, Chrome, LayoutGrid } from 'lucide-react';
+import { X, Terminal, Folder, Chrome, LayoutGrid, Unlock, User } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 interface UbuntuDesktopProps {
@@ -7,6 +7,9 @@ interface UbuntuDesktopProps {
 
 export function UbuntuDesktop({ onClose }: UbuntuDesktopProps) {
   const [time, setTime] = useState<string>('');
+  const [isLocked, setIsLocked] = useState(true);
+  const [password, setPassword] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
     const updateTime = () => {
@@ -17,6 +20,63 @@ export function UbuntuDesktop({ onClose }: UbuntuDesktopProps) {
     const interval = setInterval(updateTime, 60000);
     return () => clearInterval(interval);
   }, []);
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password.toLowerCase() === 'kira123') {
+      setIsLocked(false);
+      setErrorMsg('');
+    } else {
+      setErrorMsg('Incorrect password. Please try again.');
+      setPassword('');
+    }
+  };
+
+  if (isLocked) {
+    return (
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center pointer-events-auto bg-slate-900 font-sans animate-in fade-in duration-300">
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-800 to-slate-950 opacity-80" />
+        
+        <div className="relative z-10 flex flex-col items-center w-full max-w-sm px-6 text-center">
+          <div className="text-6xl font-light text-white mb-12 drop-shadow-md">
+            {time.split(',')[0]}
+          </div>
+          
+          <div className="w-24 h-24 bg-slate-700 rounded-full flex items-center justify-center mb-6 shadow-xl border-2 border-slate-600">
+            <User size={48} className="text-slate-300" />
+          </div>
+          
+          <h2 className="text-xl font-medium text-white mb-6">Ava</h2>
+          
+          <form onSubmit={handleLogin} className="w-full relative">
+            <input 
+              type="password" 
+              placeholder="Password" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full bg-slate-800/80 border border-slate-600 rounded-md py-2.5 px-4 text-white text-center focus:outline-none focus:ring-2 focus:ring-orange-500/50 shadow-inner backdrop-blur-sm transition-all"
+              autoFocus
+            />
+            {errorMsg && (
+              <div className="absolute top-full left-0 w-full mt-2 text-red-400 text-sm animate-pulse">
+                {errorMsg}
+              </div>
+            )}
+            <button type="submit" className="hidden">Login</button>
+          </form>
+        </div>
+        
+        <div className="absolute top-4 right-4 flex gap-4 text-white/80">
+          <span className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center text-[10px] font-bold">EN</span>
+          <span>📶</span>
+          <span>🔋</span>
+          <button onClick={onClose} className="hover:text-red-400 transition ml-2">
+            <X size={18} />
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col pointer-events-auto bg-slate-100 text-slate-800 font-sans animate-in zoom-in-95 duration-300">
