@@ -11,6 +11,14 @@ export function UbuntuDesktop({ onClose }: UbuntuDesktopProps) {
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
+  // Terminal State
+  const [terminalHistory, setTerminalHistory] = useState<{ type: 'command' | 'output'; text: string }[]>([
+    { type: 'output', text: 'Welcome to the Ubuntu OS integration!' },
+    { type: 'output', text: 'Type "help" to see available commands.' }
+  ]);
+  const [currentDir, setCurrentDir] = useState('/home/user');
+  const [commandInput, setCommandInput] = useState('');
+
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
@@ -78,16 +86,7 @@ export function UbuntuDesktop({ onClose }: UbuntuDesktopProps) {
     );
   }
 
-  // Terminal State
-  const [terminalHistory, setTerminalHistory] = useState<{ type: 'command' | 'output'; text: string }[]>([
-    { type: 'output', text: 'Welcome to the Ubuntu OS integration!' },
-    { type: 'output', text: 'Type "help" to see available commands.' }
-  ]);
-  const [currentDir, setCurrentDir] = useState('/home/user');
-  const [commandInput, setCommandInput] = useState('');
-
   const executeCommand = async (e: React.FormEvent) => {
-    e.preventDefault();
     if (!commandInput.trim()) return;
 
     const cmd = commandInput.trim();
