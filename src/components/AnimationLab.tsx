@@ -1084,7 +1084,7 @@ export function AnimationLab({
                 gizmoMode={gizmoMode}
                 lockedBones={lockedBones}
                 controlsRef={orbitControlsRef}
-                modelPath={selectedModel === 'female' ? '/female.glb' : '/male.glb'}
+                modelPath={selectedModel === 'female' ? `${import.meta.env.BASE_URL}female.glb` : `${import.meta.env.BASE_URL}male.glb`}
                 enablePhysics={enablePhysics}
                 preventStretch={preventStretch}
                 clampLimits={clampLimits}

@@ -103,7 +103,7 @@ export function LabModel({
   gizmoMode = 'rotate',
   lockedBones = new Set(),
   controlsRef,
-  modelPath = '/model.glb',
+  modelPath = `${import.meta.env.BASE_URL}model.glb`,
   enablePhysics = true,
   preventStretch = true,
   clampLimits = true,

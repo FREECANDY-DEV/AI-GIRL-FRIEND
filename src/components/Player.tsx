@@ -43,7 +43,7 @@ export function Player({
   const { camera } = useThree();
   const group = useRef<THREE.Group>(null);
   const rigidBody = useRef<RapierRigidBody>(null);
-  const { scene: gltfScene } = useGLTF('/model.glb');
+  const { scene: gltfScene } = useGLTF(`${import.meta.env.BASE_URL}model.glb`);
   const scene = useMemo(() => SkeletonUtils.clone(gltfScene), [gltfScene]);
 
   // Refs for bones
@@ -785,6 +785,6 @@ export function Player({
   );
 }
 
-useGLTF.preload('/model.glb');
+useGLTF.preload(`${import.meta.env.BASE_URL}model.glb`);
 
 

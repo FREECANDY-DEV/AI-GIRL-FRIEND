@@ -11,7 +11,7 @@ interface CardPreviewModelProps {
   modelPath?: string;
 }
 
-function CardPreviewModel({ clip, pose, modelPath = '/model.glb' }: CardPreviewModelProps) {
+function CardPreviewModel({ clip, pose, modelPath = `${import.meta.env.BASE_URL}model.glb` }: CardPreviewModelProps) {
   const group = useRef<THREE.Group>(null);
   const { scene: gltfScene } = useGLTF(modelPath);
   const scene = useMemo(() => SkeletonUtils.clone(gltfScene), [gltfScene]);
