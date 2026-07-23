@@ -1,5 +1,5 @@
 import { useGLTF, Html } from '@react-three/drei';
-import { useFrame, useThree } from '@react-three/fiber';
+import { useFrame, useThree, useLoader } from '@react-three/fiber';
 import { useEffect, useRef, useMemo, useState } from 'react';
 import * as THREE from 'three';
 import { RigidBody, RapierRigidBody, CapsuleCollider, useRapier } from '@react-three/rapier';
@@ -48,6 +48,7 @@ export function Player({
   const rigidBody = useRef<RapierRigidBody>(null);
   const { scene: gltfScene } = useGLTF(`${import.meta.env.BASE_URL}model.glb`);
   const scene = useMemo(() => SkeletonUtils.clone(gltfScene), [gltfScene]);
+  const footprintTex = useLoader(THREE.TextureLoader, '/footprint.jpg');
 
   // Refs for bones
   const hips = useRef<THREE.Bone | null>(null);
@@ -447,29 +448,31 @@ export function Player({
           stepSideRef.current = !stepSideRef.current;
 
           if (footprintsGroupRef.current) {
-            const sideOffset = stepSideRef.current ? 0.18 : -0.18;
-            const offsetX = Math.cos(bodyAngle) * sideOffset;
-            const offsetZ = -Math.sin(bodyAngle) * sideOffset;
+            const footBoneName = stepSideRef.current ? 'RightFoot' : 'LeftFoot';
+            const footBone = scene.getObjectByName(footBoneName);
             
-            const pos = new THREE.Vector3(originPos.x, originPos.y, originPos.z);
-            pos.x += offsetX;
-            pos.z += offsetZ;
-            pos.y = 0.02; // Slightly above ground to prevent Z-fighting
+            if (footBone) {
+              const footPos = footBone.getWorldPosition(new THREE.Vector3());
+              const pos = new THREE.Vector3(footPos.x, 0.02, footPos.z);
 
-            const mesh = new THREE.Mesh(
-              footprintGeo,
-              new THREE.MeshBasicMaterial({ 
-                color: new THREE.Color('#06b6d4'),
-                transparent: true, 
-                opacity: 0.6, 
-                depthWrite: false,
-                blending: THREE.AdditiveBlending
-              })
-            );
-            mesh.rotation.x = -Math.PI / 2;
-            mesh.rotation.z = -bodyAngle;
-            mesh.position.copy(pos);
-            footprintsGroupRef.current.add(mesh);
+              const mesh = new THREE.Mesh(
+                footprintGeo,
+                new THREE.MeshBasicMaterial({ 
+                  color: new THREE.Color('#06b6d4'),
+                  transparent: true, 
+                  opacity: 0.8, 
+                  alphaMap: footprintTex,
+                  depthWrite: false,
+                  blending: THREE.AdditiveBlending
+                })
+              );
+              mesh.rotation.x = -Math.PI / 2;
+              mesh.rotation.z = -bodyAngle;
+              // Mirror the left footprint
+              mesh.scale.x = stepSideRef.current ? 1 : -1;
+              mesh.position.copy(pos);
+              footprintsGroupRef.current.add(mesh);
+            }
           }
         }
 
