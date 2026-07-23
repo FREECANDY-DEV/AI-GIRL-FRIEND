@@ -964,11 +964,10 @@ export function Player({
     let shakeX = 0;
     const elapsedTime = state.clock.getElapsedTime();
 
-    if (isMoving) {
-      // Walking Footstep Shake: Vertical step bobbing & lateral step sway
-      const stepPhase = elapsedTime * 10;
-      shakeY = Math.sin(stepPhase) * 0.022;
-      shakeX = Math.cos(stepPhase * 0.5) * 0.012;
+    if (isMoving && !isFreeCamera) {
+      // Walking Shake removed per user request
+      shakeY = 0;
+      shakeX = 0;
     } else {
       // Idle Breathing Shake: Micro-sinusoidal chest sway
       const breathPhase = elapsedTime * 1.8;
