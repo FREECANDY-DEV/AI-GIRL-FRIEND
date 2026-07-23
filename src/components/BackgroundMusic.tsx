@@ -161,7 +161,7 @@ export function BackgroundMusic() {
   };
 
   return (
-    <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-30 pointer-events-auto flex items-center gap-2 bg-slate-900/95 border border-slate-800 p-2 rounded-2xl shadow-2xl backdrop-blur-xl animate-in fade-in duration-300">
+    <div className="absolute top-4 left-24 sm:top-6 sm:left-24 z-30 pointer-events-auto flex items-center gap-2 bg-slate-900/95 border border-slate-800 p-2 rounded-2xl shadow-2xl backdrop-blur-xl animate-in fade-in duration-300">
       
       <button
         onClick={toggleMute}

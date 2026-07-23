@@ -48,8 +48,18 @@ export function Player({
   const { camera, scene: globalScene } = useThree();
   const group = useRef<THREE.Group>(null);
   const rigidBody = useRef<RapierRigidBody>(null);
-  const { scene: gltfScene } = useGLTF(`${import.meta.env.BASE_URL}model.glb`);
+  const { scene: gltfScene, animations } = useGLTF(`${import.meta.env.BASE_URL}model.glb`);
   const scene = useMemo(() => SkeletonUtils.clone(gltfScene), [gltfScene]);
+
+  useEffect(() => {
+    (window as any).mainCharacterScene = scene;
+    return () => {
+      if ((window as any).mainCharacterScene === scene) {
+        (window as any).mainCharacterScene = null;
+      }
+    };
+  }, [scene]);
+
   const leftFootprintTex = useLoader(THREE.TextureLoader, `${import.meta.env.BASE_URL}left_footprint.jpg`);
   const rightFootprintTex = useLoader(THREE.TextureLoader, `${import.meta.env.BASE_URL}right_footprint.jpg`);
 
