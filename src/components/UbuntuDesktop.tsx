@@ -88,6 +88,7 @@ export function UbuntuDesktop({ onClose }: UbuntuDesktopProps) {
   }
 
   const executeCommand = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!commandInput.trim()) return;
 
     const cmd = commandInput.trim();
