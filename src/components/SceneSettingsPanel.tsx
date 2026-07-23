@@ -18,7 +18,7 @@ export function SceneSettingsPanel({ config, onChange, onClose }: SceneSettingsP
   };
 
   return (
-    <div className="fixed inset-y-0 right-0 w-80 bg-slate-900/95 backdrop-blur-xl border-l border-slate-800 shadow-2xl z-[100] flex flex-col font-sans text-slate-200">
+    <div className="h-full w-80 shrink-0 bg-slate-900/95 backdrop-blur-xl border-l border-slate-800 shadow-2xl z-[100] flex flex-col font-sans text-slate-200 transition-all duration-300">
       <div className="p-4 border-b border-slate-800 flex items-center justify-between">
         <h2 className="text-sm font-bold flex items-center gap-2">
           <Settings2 size={16} className="text-emerald-400" />
@@ -86,93 +86,6 @@ export function SceneSettingsPanel({ config, onChange, onClose }: SceneSettingsP
               step="0.1"
               value={config.directionalLightIntensity}
               onChange={(e) => updateField('directionalLightIntensity', parseFloat(e.target.value))}
-              className="w-full accent-emerald-500"
-            />
-          </div>
-        </section>
-
-        {/* Camera Post Processing */}
-        <section className="space-y-4">
-          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-            <Sparkles size={12} /> Post-Processing
-          </h3>
-
-          <div className="space-y-1">
-            <div className="flex justify-between text-[11px]">
-              <span>Color Saturation</span>
-              <span className="font-mono text-emerald-400">{config.saturation.toFixed(2)}</span>
-            </div>
-            <input
-              type="range"
-              min="0"
-              max="2.5"
-              step="0.05"
-              value={config.saturation}
-              onChange={(e) => updateField('saturation', parseFloat(e.target.value))}
-              className="w-full accent-emerald-500"
-            />
-          </div>
-
-          <div className="space-y-1">
-            <div className="flex justify-between text-[11px]">
-              <span>Brightness</span>
-              <span className="font-mono text-emerald-400">{config.brightness.toFixed(2)}</span>
-            </div>
-            <input
-              type="range"
-              min="-0.5"
-              max="0.5"
-              step="0.05"
-              value={config.brightness}
-              onChange={(e) => updateField('brightness', parseFloat(e.target.value))}
-              className="w-full accent-emerald-500"
-            />
-          </div>
-          
-          <div className="space-y-1">
-            <div className="flex justify-between text-[11px]">
-              <span>Contrast</span>
-              <span className="font-mono text-emerald-400">{config.contrast.toFixed(2)}</span>
-            </div>
-            <input
-              type="range"
-              min="0.5"
-              max="2.0"
-              step="0.05"
-              value={config.contrast}
-              onChange={(e) => updateField('contrast', parseFloat(e.target.value))}
-              className="w-full accent-emerald-500"
-            />
-          </div>
-
-          <div className="space-y-1">
-            <div className="flex justify-between text-[11px]">
-              <span>Film Grain</span>
-              <span className="font-mono text-emerald-400">{config.filmGrain.toFixed(2)}</span>
-            </div>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.05"
-              value={config.filmGrain}
-              onChange={(e) => updateField('filmGrain', parseFloat(e.target.value))}
-              className="w-full accent-emerald-500"
-            />
-          </div>
-
-          <div className="space-y-1">
-            <div className="flex justify-between text-[11px]">
-              <span>Bloom Intensity</span>
-              <span className="font-mono text-emerald-400">{config.bloomIntensity.toFixed(2)}</span>
-            </div>
-            <input
-              type="range"
-              min="0"
-              max="2"
-              step="0.05"
-              value={config.bloomIntensity}
-              onChange={(e) => updateField('bloomIntensity', parseFloat(e.target.value))}
               className="w-full accent-emerald-500"
             />
           </div>

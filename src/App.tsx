@@ -5,7 +5,6 @@
 
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Grid, ContactShadows, Stars } from '@react-three/drei';
-import { EffectComposer, Bloom, Noise, HueSaturation, BrightnessContrast } from '@react-three/postprocessing';
 import { Physics, RigidBody, CuboidCollider } from '@react-three/rapier';
 import { useState, useEffect, useRef, Suspense } from 'react';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
@@ -74,15 +73,15 @@ export default function App() {
 
   const [sceneConfig, setSceneConfig] = useState<SceneConfig>(() => {
     try {
-      const saved = localStorage.getItem('lab_scene_config');
-      return saved ? JSON.parse(saved) : DEFAULT_SCENE_CONFIG;
+      const saved = localStorage.getItem('lab_scene_config_v2');
+      return saved ? { ...DEFAULT_SCENE_CONFIG, ...JSON.parse(saved) } : DEFAULT_SCENE_CONFIG;
     } catch {
       return DEFAULT_SCENE_CONFIG;
     }
   });
 
   useEffect(() => {
-    localStorage.setItem('lab_scene_config', JSON.stringify(sceneConfig));
+    localStorage.setItem('lab_scene_config_v2', JSON.stringify(sceneConfig));
   }, [sceneConfig]);
 
   const [isSceneSettingsOpen, setIsSceneSettingsOpen] = useState(false);
@@ -635,12 +634,6 @@ export default function App() {
             fadeStrength={1}
             infiniteGrid
           />
-          <EffectComposer>
-            <HueSaturation saturation={sceneConfig.saturation - 1.0} />
-            <BrightnessContrast brightness={sceneConfig.brightness} contrast={sceneConfig.contrast - 1.0} />
-            <Noise opacity={sceneConfig.filmGrain} />
-            <Bloom intensity={sceneConfig.bloomIntensity} luminanceThreshold={0.8} />
-          </EffectComposer>
         </Canvas>
 
         {/* Ultra-Intense Cinematic Film Grain & Vignette Overlay (Permanent Default) */}
