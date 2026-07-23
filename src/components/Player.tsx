@@ -846,8 +846,8 @@ export function Player({
         // Smoothly move the orbit target
         orbitControlsRef.current.target.lerp(lookAtTarget, Math.min(1, 12 * delta));
         
-        // Auto-follow camera: rotate camera to align with movement direction when walking forward
-        if (isMoving && joystickMove.y > 0.1) {
+        // Auto-follow camera: rotate camera to align with movement direction always
+        if (isMoving) {
           const offset = camera.position.clone().sub(lookAtTarget);
           const currentAzimuth = Math.atan2(offset.x, offset.z);
           
@@ -858,8 +858,8 @@ export function Player({
           while (deltaAzimuth > Math.PI) deltaAzimuth -= Math.PI * 2;
           while (deltaAzimuth < -Math.PI) deltaAzimuth += Math.PI * 2;
           
-          // Smooth rotation speed, scales with how much forward we are pushing
-          const rotationSpeed = 3.5 * delta * joystickMove.y;
+          // Smooth rotation speed, scales with movement magnitude
+          const rotationSpeed = 3.5 * delta * Math.min(1, Math.abs(joystickMove.x) + Math.abs(joystickMove.y));
           
           if (Math.abs(deltaAzimuth) > 0.01) {
             const newAzimuth = currentAzimuth + deltaAzimuth * rotationSpeed;
