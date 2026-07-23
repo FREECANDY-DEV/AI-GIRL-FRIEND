@@ -859,6 +859,45 @@ export function Player({
 
         const spine1Target = new THREE.Quaternion().setFromEuler(new THREE.Euler(spine1.current.rotation.x, spine1Yaw, spine1.current.rotation.z, 'YXZ'));
         spine1.current.quaternion.slerp(spine1Target, 4 * delta);
+      } else if (isFreeCamera && head.current && neck.current && spine2.current && !isMoving) {
+        // In free camera, make the head and eyes follow the mouse cursor!
+        // Calculate target angles based on mouse pointer
+        const mouseX = state.pointer.x;
+        const mouseY = state.pointer.y;
+        
+        // To make it look at the mouse accurately regardless of camera angle,
+        // we calculate the angle from the character's face to the camera,
+        // then offset it by the mouse position.
+        const charPos = group.current.getWorldPosition(new THREE.Vector3());
+        const charToCam = camera.position.clone().sub(charPos).normalize();
+        const camYaw = Math.atan2(charToCam.x, charToCam.z);
+        
+        // Calculate the relative yaw from the character's body rotation
+        const charBodyYaw = group.current?.rotation.y || 0;
+        let relativeYaw = camYaw - charBodyYaw;
+        while (relativeYaw > Math.PI) relativeYaw -= Math.PI * 2;
+        while (relativeYaw < -Math.PI) relativeYaw += Math.PI * 2;
+        
+        // Add mouse offsets (inverted so moving right makes them look right)
+        const finalHeadYaw = THREE.MathUtils.clamp(relativeYaw - mouseX * 0.8, -Math.PI / 2, Math.PI / 2);
+        const finalHeadPitch = THREE.MathUtils.clamp(-mouseY * 0.5, -0.5, 0.5);
+
+        const headTarget = new THREE.Quaternion().setFromEuler(new THREE.Euler(finalHeadPitch, finalHeadYaw * 0.6, head.current.rotation.z, 'YXZ'));
+        head.current.quaternion.slerp(headTarget, 10 * delta);
+
+        const neckTarget = new THREE.Quaternion().setFromEuler(new THREE.Euler(finalHeadPitch * 0.5, finalHeadYaw * 0.4, neck.current.rotation.z, 'YXZ'));
+        neck.current.quaternion.slerp(neckTarget, 8 * delta);
+        
+        // Make the eyes track the mouse even more precisely!
+        if (rightEye.current && leftEye.current) {
+          // Eyes move further than the head to "look" at the cursor
+          const eyeTargetPitch = THREE.MathUtils.clamp(-mouseY * 0.8, -0.6, 0.6);
+          const eyeTargetYaw = THREE.MathUtils.clamp(relativeYaw - mouseX * 1.2, -0.8, 0.8);
+          
+          const eyeTarget = new THREE.Quaternion().setFromEuler(new THREE.Euler(eyeTargetPitch, eyeTargetYaw, 0, 'YXZ'));
+          rightEye.current.quaternion.slerp(eyeTarget, 15 * delta);
+          leftEye.current.quaternion.slerp(eyeTarget, 15 * delta);
+        }
       }
 
       // 2. Real Human Flesh & Bone Self-Collision Solver (Active during bone dragging)
