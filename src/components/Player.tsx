@@ -892,23 +892,40 @@ export function Player({
         while (localYaw > Math.PI) localYaw -= Math.PI * 2;
         while (localYaw < -Math.PI) localYaw += Math.PI * 2;
         
-        // Clamp to prevent breaking the neck (limits to about 70 degrees left/right)
-        const finalHeadYaw = THREE.MathUtils.clamp(localYaw, -Math.PI / 2.5, Math.PI / 2.5);
-        const finalHeadPitch = THREE.MathUtils.clamp(targetWorldPitch, -0.6, 0.6);
+        // --- DEADZONE IK SYSTEM ---
+        // Human anatomy: eyes move first for small angles, head turns for large angles.
+        const maxEyeYaw = 0.25; // ~14 degrees deadzone before head turns
+        const maxEyePitch = 0.15; // ~8 degrees deadzone before head tilts
+        
+        let headYawDemand = 0;
+        if (localYaw > maxEyeYaw) headYawDemand = localYaw - maxEyeYaw;
+        else if (localYaw < -maxEyeYaw) headYawDemand = localYaw + maxEyeYaw;
+        
+        let headPitchDemand = 0;
+        if (targetWorldPitch > maxEyePitch) headPitchDemand = targetWorldPitch - maxEyePitch;
+        else if (targetWorldPitch < -maxEyePitch) headPitchDemand = targetWorldPitch + maxEyePitch;
+        
+        // Clamp head limits
+        const finalHeadYaw = THREE.MathUtils.clamp(headYawDemand, -Math.PI / 2.5, Math.PI / 2.5);
+        const finalHeadPitch = THREE.MathUtils.clamp(headPitchDemand, -0.6, 0.6);
 
-        const headTarget = new THREE.Quaternion().setFromEuler(new THREE.Euler(-finalHeadPitch * 0.8, finalHeadYaw * 0.6, head.current.rotation.z, 'YXZ'));
+        // Split head rotation across neck and head bones for a natural curve
+        const headTarget = new THREE.Quaternion().setFromEuler(new THREE.Euler(-finalHeadPitch * 0.6, finalHeadYaw * 0.6, head.current.rotation.z, 'YXZ'));
         head.current.quaternion.slerp(headTarget, 12 * delta);
 
         const neckTarget = new THREE.Quaternion().setFromEuler(new THREE.Euler(-finalHeadPitch * 0.4, finalHeadYaw * 0.4, neck.current.rotation.z, 'YXZ'));
         neck.current.quaternion.slerp(neckTarget, 10 * delta);
         
-        // Make the eyes track the mouse perfectly
+        // Make the eyes track the exact remainder of the angle
         if (rightEye.current && leftEye.current) {
-          // Eyes can rotate slightly further to pinpoint the exact cursor
-          const eyeTargetPitch = THREE.MathUtils.clamp(-targetWorldPitch * 1.5, -0.8, 0.8);
-          const eyeTargetYaw = THREE.MathUtils.clamp(localYaw * 1.2, -0.9, 0.9);
+          // Eyes take exactly the rotation the head didn't cover
+          const requiredEyeYaw = localYaw - finalHeadYaw;
+          const requiredEyePitch = targetWorldPitch - finalHeadPitch;
           
-          const eyeTarget = new THREE.Quaternion().setFromEuler(new THREE.Euler(eyeTargetPitch, eyeTargetYaw, 0, 'YXZ'));
+          const finalEyeYaw = THREE.MathUtils.clamp(requiredEyeYaw, -0.8, 0.8);
+          const finalEyePitch = THREE.MathUtils.clamp(-requiredEyePitch, -0.6, 0.6); // Pitch inverted for Mixamo eye bones
+          
+          const eyeTarget = new THREE.Quaternion().setFromEuler(new THREE.Euler(finalEyePitch, finalEyeYaw, 0, 'YXZ'));
           rightEye.current.quaternion.slerp(eyeTarget, 20 * delta);
           leftEye.current.quaternion.slerp(eyeTarget, 20 * delta);
         }
