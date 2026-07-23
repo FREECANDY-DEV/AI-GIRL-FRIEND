@@ -1,30 +1,71 @@
 # 🌌 GridMap Studio — 3D Cyberpunk AI Companion & Studio
 
-**Live Demo:** [Play Now on GitHub Pages](https://freecandy-dev.github.io/AI-GIRL-FRIEND/)
+<div align="center">
+  <img src="screenshots/hero_view.png" alt="GridMap Studio Main View" width="100%"/>
+  <br/>
+  <em>GridMap Studio features Ava, an AI-powered 3D companion living in an interactive cyberpunk WebGL environment.</em>
+</div>
+
+<p align="center">
+  <b>Live Demo:</b> <a href="https://freecandy-dev.github.io/AI-GIRL-FRIEND/">Play Now on GitHub Pages</a>
+</p>
 
 An interactive 3D WebGL web application featuring **Ava**, an AI-powered 3D companion driven by **Z.AI GLM-4.5-Flash** and multilingual female Text-to-Speech (TTS). Built with **React 18**, **Three.js / React Three Fiber**, **Tailwind CSS**, and **Rapier Physics**.
 
 ---
 
-## 📸 Gallery
+## 📸 Feature Showcase
 
-<p align="center">
-  <img src="screenshots/main_view.png" alt="Main View" width="800"/>
-  <br/>
-  <em>Main 3D viewport with the AI companion, interactive physics objects, and dynamic UI</em>
-</p>
+### 🤖 The Companion & UI
+<table align="center">
+  <tr>
+    <td align="center">
+      <img src="screenshots/hero_view.png" alt="GridMap Studio Main View" width="400"/>
+      <br/>
+      <em>Main 3D Viewport</em>
+    </td>
+    <td align="center">
+      <img src="screenshots/chat_history.png" alt="Chat History" width="400"/>
+      <br/>
+      <em>Chat History Logs</em>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <img src="screenshots/profile_database.png" alt="Profile View" width="400"/>
+      <br/>
+      <em>Expandable Character Profile</em>
+    </td>
+    <td align="center">
+      <img src="screenshots/tools_menu.png" alt="Toolbar Expanded" width="400"/>
+      <br/>
+      <em>Floating Toolbars & Media</em>
+    </td>
+  </tr>
+</table>
 
-<p align="center">
-  <img src="screenshots/profile_view.png" alt="Profile View" width="800"/>
-  <br/>
-  <em>Expandable Character Profile with Real-time PiP CRT camera feed and RPG-style stats database</em>
-</p>
-
-<p align="center">
-  <img src="screenshots/toolbar_expanded.png" alt="Toolbar Expanded" width="800"/>
-  <br/>
-  <em>Expandable toolbars, camera controls, background music player, and USDT donation widget</em>
-</p>
+### 💻 Interactive Ubuntu OS
+<table align="center">
+  <tr>
+    <td align="center">
+      <img src="screenshots/ubuntu_desktop.png" alt="Ubuntu Desktop Login" width="400"/>
+      <br/>
+      <em>Full-Screen Simulated Ubuntu OS</em>
+    </td>
+    <td align="center">
+      <img src="screenshots/ubuntu_files.png" alt="Ubuntu File Explorer" width="400"/>
+      <br/>
+      <em>File Explorer & Image Viewer</em>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" colspan="2">
+      <img src="screenshots/ubuntu_terminal.png" alt="Ubuntu Terminal" width="500"/>
+      <br/>
+      <em>Working 3D Terminal Simulator</em>
+    </td>
+  </tr>
+</table>
 
 ---
 
@@ -32,7 +73,7 @@ An interactive 3D WebGL web application featuring **Ava**, an AI-powered 3D comp
 
 - 🤖 **Z.AI GLM-4.5-Flash AI Companion**: Real-time AI companion powered by Z.AI's GLM-4.5-Flash model with multilingual support (English, Hebrew, Spanish, French, German, Russian, Arabic, Japanese, Chinese) and spoken female voice output.
 - 📊 **Dynamic Character Profile**: Expandable profile widget featuring a live Picture-in-Picture (PiP) 3D camera feed of Ava's face with CRT noise/glitch effects, and a highly detailed RPG-style database layout showing live character stats.
-- 💻 **Simulated Ubuntu OS**: Clickable 3D laptop that triggers a full-screen interactive Ubuntu desktop interface. Includes a draggable Terminal, File Explorer with vacation pictures, an Image Viewer app, and a fully playable 2048 game!
+- 💻 **Simulated Ubuntu OS**: Clickable 3D laptop that triggers a full-screen interactive Ubuntu desktop interface. Includes a draggable Terminal, File Explorer with vacation pictures, and an Image Viewer app!
 - 🎵 **Chill Lo-Fi Audio**: Floating background music player with interactive visualizer bars, play/pause controls, and volume adjustments.
 - 💰 **Crypto Donations**: Minimalistic floating ₮ (USDT) button with a quick TRC20 address copy-to-clipboard functionality to support development.
 - 💬 **Interactive Speech Bubble**: Responses float cleanly directly on top of the prompt input bar with line wrapping and TTS audio playback.
@@ -83,3 +124,8 @@ The app comes pre-configured with Z.AI GLM-4.5-Flash API integration out-of-the-
 - **Styling**: Tailwind CSS
 - **Icons**: Lucide React
 - **AI Model**: Z.AI GLM-4.5-Flash API
+
+---
+<div align="center">
+  <i>Developed with precision and passion for immersive web experiences.</i>
+</div>
