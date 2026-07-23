@@ -86,6 +86,7 @@ export function Player({
   const headFacingRef = useRef<number | null>(null);
   const isHeadCorrectingRef = useRef(false);
   const hasInitFreeCamRef = useRef(false);
+  const hasInitOtsCamRef = useRef(false);
   const isZoomedCloseRef = useRef(false);
   const turnAnticipationRef = useRef({ isTurning: false, targetAngle: 0 });
 
@@ -227,6 +228,7 @@ export function Player({
         group.current.quaternion.identity();
       }
       hasInitFreeCamRef.current = false;
+      hasInitOtsCamRef.current = false;
     }
   }, [resetTrigger]);
 
@@ -800,12 +802,23 @@ export function Player({
     if (orbitControlsRef.current) {
       if (isFreeCamera && !hasInitFreeCamRef.current) {
         hasInitFreeCamRef.current = true;
+        hasInitOtsCamRef.current = false;
         // Position camera directly in front of model face at eye level looking squarely at her face (World Y = 1.45m)
         camera.position.set(0, 1.45, 1.6);
         orbitControlsRef.current.target.set(0, 1.45, 0);
         orbitControlsRef.current.update();
       } else if (!isFreeCamera) {
         hasInitFreeCamRef.current = false;
+
+        if (!hasInitOtsCamRef.current) {
+          hasInitOtsCamRef.current = true;
+          // Snap camera immediately behind the character when toggling to OTS
+          const charYaw = group.current?.rotation.y || 0;
+          const radius = 2.5;
+          const camX = playerWorldPos.x + Math.sin(charYaw + Math.PI) * radius;
+          const camZ = playerWorldPos.z + Math.cos(charYaw + Math.PI) * radius;
+          camera.position.set(camX, playerWorldPos.y + 1.45, camZ);
+        }
 
         const camRight = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
         camRight.y = 0;
