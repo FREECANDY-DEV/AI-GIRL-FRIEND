@@ -40,7 +40,7 @@ export default function App() {
   const [isCamControlsOpen, setIsCamControlsOpen] = useState(false);
 
   // Camera Height & Permanent Save State
-  const [camHeight, setCamHeight] = useState<number>(1.45);
+  const [camHeight, setCamHeight] = useState<number>(1.50);
   const [saveToast, setSaveToast] = useState<string | null>(null);
 
   // Dynamic Touch Screen Detection (Joystick appears only when touching screen)
@@ -298,7 +298,9 @@ export default function App() {
     // This will trigger smooth camera transition in Player.tsx
     setResetTrigger((prev) => prev + 1);
 
-    setCamHeight(1.45);
+    // 3. Reset the camera height slider to default
+    setCamHeight(1.50);
+    
     setSaveToast('Model & View Reset to Front Face View!');
     setTimeout(() => setSaveToast(null), 3000);
   };

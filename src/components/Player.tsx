@@ -1111,11 +1111,14 @@ export function Player({
           .add(camRight.multiplyScalar(0.4 + shakeX));
 
         if (!hasInitOtsCamRef.current) {
-          orbitControlsRef.current.target.lerp(lookAtTarget, Math.min(1, 6 * delta));
+          orbitControlsRef.current.target.lerp(lookAtTarget, Math.min(1, 1.5 * delta));
         } else {
-          // Snap the orbit target exactly to the character's smooth interpolated position
-          // This completely eliminates the "zooming out" lag illusion when walking forward!
+          // If the target moves without the camera moving, OrbitControls will think the user zoomed out.
+          // To perfectly lock the camera distance, we must move the camera by the exact same delta as the target!
+          const prevTarget = orbitControlsRef.current.target.clone();
           orbitControlsRef.current.target.copy(lookAtTarget);
+          const targetDelta = lookAtTarget.clone().sub(prevTarget);
+          camera.position.add(targetDelta);
         }
         
         // Auto-follow camera: rotate camera to align with movement direction always
