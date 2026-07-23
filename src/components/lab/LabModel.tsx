@@ -366,11 +366,11 @@ export function LabModel({
         const isLeg = name.includes('Leg') || name.includes('Foot') || name.includes('Toe');
         const isSpine = name.includes('Spine') || name.includes('Neck') || name.includes('Head');
         
-        let mass = 1.0, stiffness = 150.0, damping = 10.0, gravityPull = 1.0;
+        let mass = 1.0, stiffness = 80.0, damping = 8.0, gravityBlend = 0.85;
 
-        if (isLeg) { mass = 2.0; stiffness = 200.0; damping = 15.0; gravityPull = 1.5; }
-        else if (isSpine) { mass = 3.0; stiffness = 300.0; damping = 20.0; gravityPull = 0.2; }
-        else if (isArm) { mass = 0.5; stiffness = 80.0; damping = 8.0; gravityPull = 1.0; }
+        if (isLeg) { mass = 2.0; stiffness = 100.0; damping = 10.0; gravityBlend = 0.95; }
+        else if (isSpine) { mass = 3.0; stiffness = 150.0; damping = 15.0; gravityBlend = 0.5; }
+        else if (isArm) { mass = 0.5; stiffness = 50.0; damping = 5.0; gravityBlend = 0.98; }
 
         // Convert world inertia to a pseudo-local torque
         const localInertia = bone.parent ? bone.parent.worldToLocal(inertiaForce.clone().add(bone.parent.getWorldPosition(new THREE.Vector3()))) : inertiaForce.clone();
@@ -379,20 +379,27 @@ export function LabModel({
         const forceX = (localInertia.z * 5.0) / mass;
         const forceZ = (-localInertia.x * 5.0) / mass;
         
-        // Convert world down (-Y) to local down to simulate pendulum gravity
+        // --- FLAWLESS PENDULUM GRAVITY MATH ---
+        // Find which way is "down" in the bone's current un-offset local space
         const worldDown = new THREE.Vector3(0, -1, 0);
-        const localDown = bone.parent ? bone.parent.worldToLocal(worldDown.clone().add(bone.parent.getWorldPosition(new THREE.Vector3()))).normalize() : worldDown;
+        const localDown = bone.worldToLocal(worldDown.clone().add(bone.getWorldPosition(new THREE.Vector3()))).normalize();
         
-        // Gravity pulls the bone's primary axis (assumed +Y for Mixamo) towards localDown
-        const gravityForceX = localDown.z * gravityPull * 10.0;
-        const gravityForceZ = -localDown.x * gravityPull * 10.0;
+        // Calculate the exact rotational offset needed to align the bone's length (+Y) with gravity
+        const targetOffsetQ = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), localDown);
+        const targetEuler = new THREE.Euler().setFromQuaternion(targetOffsetQ, 'YXZ');
+        
+        // Gravity shifts the resting point of the spring!
+        const targetX = targetEuler.x * gravityBlend;
+        const targetZ = targetEuler.z * gravityBlend;
 
-        // Hooke's Law: F = -kx - cv
-        const springForce = state.offset.clone().multiplyScalar(-stiffness);
+        // Hooke's Law: pull towards the dangling target instead of 0
+        const springForceX = (targetX - state.offset.x) * stiffness;
+        const springForceZ = (targetZ - state.offset.z) * stiffness;
+        
         const dampingForce = state.velocity.clone().multiplyScalar(-damping);
         
-        const totalForceX = springForce.x + dampingForce.x + forceX + gravityForceX;
-        const totalForceZ = springForce.z + dampingForce.z + forceZ + gravityForceZ;
+        const totalForceX = springForceX + dampingForce.x + forceX;
+        const totalForceZ = springForceZ + dampingForce.z + forceZ;
         
         // Euler integration
         state.velocity.x += totalForceX * delta;
