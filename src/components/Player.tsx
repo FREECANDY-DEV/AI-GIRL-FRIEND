@@ -43,12 +43,12 @@ export function Player({
   hideHeadSpeech,
   resetTrigger,
 }: PlayerProps) {
-  const { camera } = useThree();
+  const { camera, scene: globalScene } = useThree();
   const group = useRef<THREE.Group>(null);
   const rigidBody = useRef<RapierRigidBody>(null);
   const { scene: gltfScene } = useGLTF(`${import.meta.env.BASE_URL}model.glb`);
   const scene = useMemo(() => SkeletonUtils.clone(gltfScene), [gltfScene]);
-  const footprintTex = useLoader(THREE.TextureLoader, '/footprint.jpg');
+  const footprintTex = useLoader(THREE.TextureLoader, `${import.meta.env.BASE_URL}footprint.jpg`);
 
   // Refs for bones
   const hips = useRef<THREE.Bone | null>(null);
@@ -131,15 +131,15 @@ export function Player({
 
   useEffect(() => {
     const group = footprintsGroupRef.current;
-    if (scene) {
-      scene.add(group);
+    if (globalScene) {
+      globalScene.add(group);
     }
     return () => {
-      if (scene) {
-        scene.remove(group);
+      if (globalScene) {
+        globalScene.remove(group);
       }
     };
-  }, [scene]);
+  }, [globalScene]);
 
 
   const applyBraceIK = (bName: string, deltaQ: THREE.Quaternion) => {
@@ -463,7 +463,8 @@ export function Player({
                   opacity: 0.8, 
                   alphaMap: footprintTex,
                   depthWrite: false,
-                  blending: THREE.AdditiveBlending
+                  blending: THREE.AdditiveBlending,
+                  side: THREE.DoubleSide
                 })
               );
               mesh.rotation.x = -Math.PI / 2;
@@ -639,7 +640,7 @@ export function Player({
       for (let i = footprintsGroupRef.current.children.length - 1; i >= 0; i--) {
         const mesh = footprintsGroupRef.current.children[i] as THREE.Mesh;
         const mat = mesh.material as THREE.MeshBasicMaterial;
-        mat.opacity -= delta * 0.25; // Fade out over ~4 seconds
+        mat.opacity -= delta * 0.1; // Fade out over ~10 seconds
         if (mat.opacity <= 0) {
           footprintsGroupRef.current.remove(mesh);
           mat.dispose();
