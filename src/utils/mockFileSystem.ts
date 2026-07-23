@@ -47,6 +47,20 @@ export const MOCK_FS: DirNode = {
               type: 'dir',
               children: {},
             },
+            Pictures: {
+              type: 'dir',
+              children: {
+                Vacation: {
+                  type: 'dir',
+                  children: {
+                    'vacation1.png': { type: 'file', content: '[PNG Image Data...]' },
+                    'vacation2.png': { type: 'file', content: '[PNG Image Data...]' },
+                    'vacation3.png': { type: 'file', content: '[PNG Image Data...]' },
+                    'vacation4_feets.png': { type: 'file', content: '[PNG Image Data: Feet Picture]' },
+                  }
+                }
+              }
+            },
           },
         },
       },

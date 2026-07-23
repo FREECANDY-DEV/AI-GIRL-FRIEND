@@ -373,6 +373,24 @@ export default function App() {
     }, 5000);
   };
 
+  // Handle Easter Egg Event
+  useEffect(() => {
+    const handleFeetPicFound = () => {
+      const msg = "Hey! What are you doing looking at that folder?! Delete that right now, it's so embarrassing!";
+      setSpeechMessage(msg);
+      if (isTtsEnabled) {
+        speakFemaleTTS(msg);
+      }
+      if (speechTimerRef.current) clearTimeout(speechTimerRef.current);
+      speechTimerRef.current = setTimeout(() => {
+        setSpeechMessage(null);
+      }, 7000);
+    };
+
+    window.addEventListener('avaFeetPicFound', handleFeetPicFound);
+    return () => window.removeEventListener('avaFeetPicFound', handleFeetPicFound);
+  }, [isTtsEnabled]);
+
   // Render 3D Animation & Pose Laboratory
   if (currentView === 'lab') {
     return (

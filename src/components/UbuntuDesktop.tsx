@@ -181,22 +181,26 @@ export function UbuntuDesktop({ onClose }: UbuntuDesktopProps) {
           }
           break;
         }
-        case 'cat': {
+        case 'cat':
+        case 'open': {
           if (!args[1]) {
-            output = 'cat: missing operand';
+            output = `${command}: missing operand`;
             break;
           }
           const targetPath = resolvePath(currentDir, args[1]);
           if (!targetPath) {
-             output = `cat: ${args[1]}: No such file or directory`;
+             output = `${command}: ${args[1]}: No such file or directory`;
           } else {
             const node = getNodeAtPath(targetPath);
             if (!node) {
-              output = `cat: ${args[1]}: No such file or directory`;
+              output = `${command}: ${args[1]}: No such file or directory`;
             } else if (node.type === 'dir') {
-              output = `cat: ${args[1]}: Is a directory`;
+              output = `${command}: ${args[1]}: Is a directory`;
             } else {
               output = node.content;
+              if (args[1].includes('vacation4_feets.png')) {
+                window.dispatchEvent(new CustomEvent('avaFeetPicFound'));
+              }
             }
           }
           break;
