@@ -15,6 +15,7 @@ import { AnimationLab } from './components/AnimationLab';
 import { AnimationLibrary } from './components/AnimationLibrary';
 import { StreetLightPole } from './components/StreetLightPole';
 import { Laptop } from './components/Laptop';
+import { BackgroundMusic } from './components/BackgroundMusic';
 import { Wand2 } from 'lucide-react';
 import { SceneSettingsPanel } from './components/SceneSettingsPanel';
 import { StandingPoseConfig, AnimationClip, PosePreset } from './types/animation';
@@ -387,6 +388,7 @@ export default function App() {
   // Render Main 3D Game Map
   return (
     <div className="w-full h-screen bg-slate-950 relative flex items-center overflow-hidden touch-none select-none">
+      <BackgroundMusic />
       {/* Left-Side Chat History Panel */}
       {isHistoryOpen && (
         <aside className="w-80 sm:w-96 shrink-0 h-full bg-slate-900/95 border-r border-slate-800 shadow-2xl backdrop-blur-xl flex flex-col z-20 pointer-events-auto transition-all duration-300">
