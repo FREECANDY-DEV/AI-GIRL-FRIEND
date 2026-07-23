@@ -133,7 +133,19 @@ export function UbuntuDesktop({ onClose }: UbuntuDesktopProps) {
           break;
         }
         case 'ls': {
-          const target = args[1] || '.';
+          let target = '.';
+          let showHidden = false;
+          let showLong = false;
+
+          for (let i = 1; i < args.length; i++) {
+            if (args[i].startsWith('-')) {
+              if (args[i].includes('a')) showHidden = true;
+              if (args[i].includes('l')) showLong = true;
+            } else {
+              target = args[i];
+            }
+          }
+
           const targetPath = resolvePath(currentDir, target);
           if (!targetPath) {
              output = `ls: cannot access '${target}': No such file or directory`;
@@ -144,13 +156,27 @@ export function UbuntuDesktop({ onClose }: UbuntuDesktopProps) {
             } else if (node.type === 'file') {
               output = target;
             } else {
-              const children = Object.keys(node.children);
-              // Simple formatting: space-separated
-              output = children.map(c => {
-                const childNode = node.children[c];
-                // if we want to differentiate dirs, maybe add trailing slash or colors.
-                return childNode.type === 'dir' ? `${c}/` : c;
-              }).join('  ');
+              let children = Object.keys(node.children);
+              if (!showHidden) {
+                children = children.filter(c => !c.startsWith('.'));
+              }
+              
+              if (showLong) {
+                output = children.map(c => {
+                  const childNode = node.children[c];
+                  const isDir = childNode.type === 'dir';
+                  const perms = isDir ? 'drwxr-xr-x' : '-rw-r--r--';
+                  const size = isDir ? '4096' : childNode.content.length.toString();
+                  const date = 'Jul 24 12:00';
+                  return `${perms} 1 user user ${size.padStart(5)} ${date} ${c}`;
+                }).join('\n');
+                if (output === '') output = 'total 0'; // if empty dir
+              } else {
+                output = children.map(c => {
+                  const childNode = node.children[c];
+                  return childNode.type === 'dir' ? `${c}/` : c;
+                }).join('  ');
+              }
             }
           }
           break;
