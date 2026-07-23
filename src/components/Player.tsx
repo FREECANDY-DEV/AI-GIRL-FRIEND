@@ -977,6 +977,8 @@ export function Player({
     }
 
     if (orbitControlsRef.current) {
+      orbitControlsRef.current.enableDamping = isFreeCamera;
+
       if (isFreeCamera && !hasInitFreeCamRef.current) {
         hasInitOtsCamRef.current = false;
         // Smoothly position camera directly in front of model face at eye level
