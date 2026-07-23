@@ -536,6 +536,16 @@ export function Player({
         const allBones = new Set([...Object.keys(prev.transforms), ...Object.keys(next.transforms)]);
 
         allBones.forEach((bName) => {
+          if (isDragMode && draggedBoneNameRef.current) {
+            const draggedName = draggedBoneNameRef.current;
+            const isRightArmDragged = draggedName.includes('RightArm') || draggedName.includes('RightForeArm') || draggedName.includes('RightHand');
+            const isLeftArmDragged = draggedName.includes('LeftArm') || draggedName.includes('LeftForeArm') || draggedName.includes('LeftHand');
+            
+            if (isRightArmDragged && (bName.includes('RightArm') || bName.includes('RightForeArm') || bName.includes('RightHand'))) return;
+            if (isLeftArmDragged && (bName.includes('LeftArm') || bName.includes('LeftForeArm') || bName.includes('LeftHand'))) return;
+            if (bName === draggedName) return;
+          }
+
           const bone = scene.getObjectByName(bName) as THREE.Bone | null;
           const initQ = initialQuaternions.current.get(bName);
           if (!bone || !initQ) return;
@@ -767,6 +777,16 @@ export function Player({
         const allBones = new Set([...Object.keys(prev.transforms), ...Object.keys(next.transforms)]);
 
         allBones.forEach((bName) => {
+          if (isDragMode && draggedBoneNameRef.current) {
+            const draggedName = draggedBoneNameRef.current;
+            const isRightArmDragged = draggedName.includes('RightArm') || draggedName.includes('RightForeArm') || draggedName.includes('RightHand');
+            const isLeftArmDragged = draggedName.includes('LeftArm') || draggedName.includes('LeftForeArm') || draggedName.includes('LeftHand');
+            
+            if (isRightArmDragged && (bName.includes('RightArm') || bName.includes('RightForeArm') || bName.includes('RightHand'))) return;
+            if (isLeftArmDragged && (bName.includes('LeftArm') || bName.includes('LeftForeArm') || bName.includes('LeftHand'))) return;
+            if (bName === draggedName) return;
+          }
+
           const bone = scene.getObjectByName(bName) as THREE.Bone | null;
           const initQ = initialQuaternions.current.get(bName);
           if (!bone || !initQ) return;
