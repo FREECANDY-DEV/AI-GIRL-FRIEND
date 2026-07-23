@@ -801,23 +801,34 @@ export function Player({
 
     if (orbitControlsRef.current) {
       if (isFreeCamera && !hasInitFreeCamRef.current) {
-        hasInitFreeCamRef.current = true;
         hasInitOtsCamRef.current = false;
-        // Position camera directly in front of model face at eye level looking squarely at her face (World Y = 1.45m)
-        camera.position.set(0, 1.45, 1.6);
-        orbitControlsRef.current.target.set(0, 1.45, 0);
+        // Smoothly position camera directly in front of model face at eye level
+        const targetPos = new THREE.Vector3(0, 1.45, 1.6);
+        const targetLookAt = new THREE.Vector3(0, 1.45, 0);
+        
+        camera.position.lerp(targetPos, Math.min(1, 4 * delta));
+        orbitControlsRef.current.target.lerp(targetLookAt, Math.min(1, 6 * delta));
+        
+        if (camera.position.distanceToSquared(targetPos) < 0.01) {
+          hasInitFreeCamRef.current = true;
+        }
         orbitControlsRef.current.update();
       } else if (!isFreeCamera) {
         hasInitFreeCamRef.current = false;
 
         if (!hasInitOtsCamRef.current) {
-          hasInitOtsCamRef.current = true;
-          // Snap camera immediately behind the character when toggling to OTS
+          // Smoothly move camera behind the character when toggling to OTS
           const charYaw = group.current?.rotation.y || 0;
           const radius = 2.5;
           const camX = playerWorldPos.x + Math.sin(charYaw + Math.PI) * radius;
           const camZ = playerWorldPos.z + Math.cos(charYaw + Math.PI) * radius;
-          camera.position.set(camX, playerWorldPos.y + 1.45, camZ);
+          const targetCamPos = new THREE.Vector3(camX, playerWorldPos.y + 1.45, camZ);
+          
+          camera.position.lerp(targetCamPos, Math.min(1, 4 * delta));
+          
+          if (camera.position.distanceToSquared(targetCamPos) < 0.05) {
+            hasInitOtsCamRef.current = true;
+          }
         }
 
         const camRight = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);

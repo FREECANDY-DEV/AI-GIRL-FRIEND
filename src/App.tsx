@@ -295,14 +295,9 @@ export default function App() {
     setIsFreeCamera(true);
 
     // 2. Increment resetTrigger so Player resets rigidBody position to origin
+    // This will trigger smooth camera transition in Player.tsx
     setResetTrigger((prev) => prev + 1);
 
-    // 3. Always set camera position directly in front of her face at eye level (World Y = 1.45m)
-    if (orbitControlsRef.current) {
-      orbitControlsRef.current.object.position.set(0, 1.45, 1.6);
-      orbitControlsRef.current.target.set(0, 1.45, 0);
-      orbitControlsRef.current.update();
-    }
     setCamHeight(1.45);
     setSaveToast('Model & View Reset to Front Face View!');
     setTimeout(() => setSaveToast(null), 3000);
