@@ -83,6 +83,9 @@ export function Player({
 
   const ttsWordRef = useRef('');
   const ttsBoundaryTimeRef = useRef(0);
+  const blinkTimerRef = useRef(0);
+  const isBlinkingRef = useRef(false);
+  const blinkProgressRef = useRef(0);
 
   useEffect(() => {
     const onBoundary = (e: any) => {
@@ -691,6 +694,51 @@ export function Player({
            if (tJawOpen !== undefined) {
              teethMesh.morphTargetInfluences[tJawOpen] = THREE.MathUtils.lerp(teethMesh.morphTargetInfluences[tJawOpen], targetIntensity, 0.3);
            }
+        }
+      }
+
+      // 2.6 Random Eye Blinking
+      const headMeshBlink = scene.getObjectByName('Wolf3D_Head') as THREE.Mesh;
+      if (headMeshBlink && headMeshBlink.morphTargetDictionary && headMeshBlink.morphTargetInfluences) {
+        const blinkLeftIdx = headMeshBlink.morphTargetDictionary['eyeBlinkLeft'];
+        const blinkRightIdx = headMeshBlink.morphTargetDictionary['eyeBlinkRight'];
+
+        if (blinkLeftIdx !== undefined && blinkRightIdx !== undefined) {
+          blinkTimerRef.current -= delta;
+
+          if (blinkTimerRef.current <= 0 && !isBlinkingRef.current) {
+            // Start a blink
+            isBlinkingRef.current = true;
+            blinkProgressRef.current = 0;
+            // Set next blink timer between 2 and 6 seconds
+            blinkTimerRef.current = 2.0 + Math.random() * 4.0;
+          }
+
+          if (isBlinkingRef.current) {
+            // Blink animation (down and up) takes about 0.15 seconds
+            blinkProgressRef.current += delta * 12.0; // Speed of blink
+
+            let blinkValue = 0;
+            if (blinkProgressRef.current < 0.5) {
+               // Closing eyes
+               blinkValue = blinkProgressRef.current * 2.0;
+            } else if (blinkProgressRef.current < 1.0) {
+               // Opening eyes
+               blinkValue = 1.0 - ((blinkProgressRef.current - 0.5) * 2.0);
+            } else {
+               // Done blinking
+               blinkValue = 0;
+               isBlinkingRef.current = false;
+               
+               // 15% chance to do a double blink
+               if (Math.random() < 0.15) {
+                 blinkTimerRef.current = 0.1;
+               }
+            }
+
+            headMeshBlink.morphTargetInfluences[blinkLeftIdx] = blinkValue;
+            headMeshBlink.morphTargetInfluences[blinkRightIdx] = blinkValue;
+          }
         }
       }
     }
