@@ -18,7 +18,6 @@ interface PlayerProps {
   activeIdleClip?: AnimationClip | null;
   isDragMode?: boolean;
   speechMessage?: string | null;
-  isThinking?: boolean;
   isFreeCamera?: boolean;
   onToggleHistory?: () => void;
   onZoomChange?: (isZoomedClose: boolean) => void;
@@ -35,7 +34,6 @@ export function Player({
   activeIdleClip,
   isDragMode,
   speechMessage,
-  isThinking,
   isFreeCamera,
   onToggleHistory,
   onZoomChange,
@@ -536,12 +534,7 @@ export function Player({
         setBoneRot(spine.current, spineT + breath * 0.2, 0, 0, lerpSpeed);
         setBoneRot(spine1.current, 0.01 + breath * 0.15, spine1Yaw, 0, lerpSpeed);
         setBoneRot(spine2.current, 0.01 + breath * 0.1, shoulderYaw, 0, lerpSpeed);
-        
-        if (isThinking) {
-          setBoneRot(head.current, headT + 0.15, headYaw + 0.3, 0, lerpSpeed);
-        } else {
-          setBoneRot(head.current, headT, headYaw, 0, lerpSpeed);
-        }
+        setBoneRot(head.current, headT, headYaw, 0, lerpSpeed);
 
         // Legs - Natural stance width & knee flex
         setBoneRot(rightLeg.current, 0, 0, -stanceW, lerpSpeed);
@@ -557,24 +550,12 @@ export function Player({
         const isLeftArmDragged = isDragMode && draggedName && (draggedName.includes('LeftArm') || draggedName.includes('LeftForeArm') || draggedName.includes('LeftHand'));
 
         if (!isRightArmDragged) {
-          if (isThinking) {
-            // Hand to chin thinking pose
-            setBoneRot(rightArm.current, 0.4, 0.2, 1.3, lerpSpeed);
-            setBoneRot(rightForeArm.current, 1.8, 0, 0.3, lerpSpeed);
-          } else {
-            setBoneRot(rightArm.current, 0, shoulderYaw * 0.25, armSpr, lerpSpeed);
-            setBoneRot(rightForeArm.current, 0.1, 0, 0, lerpSpeed);
-          }
+          setBoneRot(rightArm.current, 0, shoulderYaw * 0.25, armSpr, lerpSpeed);
+          setBoneRot(rightForeArm.current, 0.1, 0, 0, lerpSpeed);
         }
         if (!isLeftArmDragged) {
-          if (isThinking) {
-            // Left arm gently supporting right elbow
-            setBoneRot(leftArm.current, 0, 0.5, -0.6, lerpSpeed);
-            setBoneRot(leftForeArm.current, 1.2, 0, 0, lerpSpeed);
-          } else {
-            setBoneRot(leftArm.current, 0, shoulderYaw * 0.25, -armSpr, lerpSpeed);
-            setBoneRot(leftForeArm.current, 0.1, 0, 0, lerpSpeed);
-          }
+          setBoneRot(leftArm.current, 0, shoulderYaw * 0.25, -armSpr, lerpSpeed);
+          setBoneRot(leftForeArm.current, 0.1, 0, 0, lerpSpeed);
         }
 
         // Apply any active custom standing pose bone rotations

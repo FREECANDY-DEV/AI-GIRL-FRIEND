@@ -14,7 +14,7 @@ import { AnimationLab } from './components/AnimationLab';
 import { AnimationLibrary } from './components/AnimationLibrary';
 import { StreetLightPole } from './components/StreetLightPole';
 import { StandingPoseConfig, AnimationClip, PosePreset } from './types/animation';
-import { DEFAULT_STANDING_POSE, DEFAULT_CLIPS } from './data/defaultAnimations';
+import { DEFAULT_STANDING_POSE, DEFAULT_CLIPS, POSE_PRESETS } from './data/defaultAnimations';
 import { Sparkles, Layers, Gamepad2, Sliders, Move, X, MessageSquare, Send, Volume2, VolumeX, Loader2, Eye, History, Save, ArrowUp, ArrowDown, Check, RotateCcw, Menu } from 'lucide-react';
 import { generateGLMResponse, speakFemaleTTS } from './utils/aiCompanion';
 
@@ -172,6 +172,13 @@ export default function App() {
   // Active walk & idle clip objects used by Player in the game map
   const activeWalkClip = customClips.find((c) => c.id === activeWalkClipId) || customClips[0] || null;
   const activeIdleClip = customClips.find((c) => c.id === 'breathing_idle') || customClips[0] || null;
+
+  // Resolve the active thinking pose
+  const allPoses = [...POSE_PRESETS, ...customPoses];
+  // Favor a custom pose named 'AI Thinking' or id 'thinking_pose', fallback to the preset
+  const activeThinkingPose = allPoses.slice().reverse().find(p => p.name === 'AI Thinking' || p.id === 'thinking_pose') || POSE_PRESETS.find(p => p.id === 'thinking_pose') || POSE_PRESETS[0];
+
+  const finalStandingPose = isAiThinking ? activeThinkingPose.pose : standingPose;
 
   // Keyboard WASD Controls
   useEffect(() => {
@@ -516,12 +523,11 @@ export default function App() {
                 joystickMove={joystickMove}
                 showSkeleton={showSkeleton}
                 orbitControlsRef={orbitControlsRef}
-                standingPose={standingPose}
+                standingPose={finalStandingPose}
                 activeWalkClip={activeWalkClip}
                 activeIdleClip={activeIdleClip}
                 isDragMode={isDragBodyMode}
                 speechMessage={speechMessage}
-                isThinking={isAiThinking}
                 isFreeCamera={isFreeCamera}
                 onToggleHistory={() => setIsHistoryOpen(!isHistoryOpen)}
                 onZoomChange={setIsCameraZoomedClose}

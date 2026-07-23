@@ -31,6 +31,25 @@ export const POSE_PRESETS: PosePreset[] = [
     pose: DEFAULT_STANDING_POSE,
   },
   {
+    id: 'thinking_pose',
+    name: 'AI Thinking',
+    description: 'The classic hand-on-chin thinking pose played when generating a response.',
+    pose: {
+      stanceWidth: 0.1,
+      armSpread: 0.05,
+      chestSpineTilt: 0.05,
+      headTilt: 0.08,
+      kneeFlex: 0.02,
+      customBoneRotations: {
+        RightArm: [23, 11, 74],
+        RightForeArm: [103, 0, 17],
+        LeftArm: [0, 28, -34],
+        LeftForeArm: [68, 0, 0],
+        Head: [8.5, 17, 0],
+      },
+    },
+  },
+  {
     id: 'hero_stance',
     name: 'Hero Champion',
     description: 'Wide grounded stance, broad chest, confident hands ready.',
