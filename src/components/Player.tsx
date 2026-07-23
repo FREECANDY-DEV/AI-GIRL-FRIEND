@@ -220,6 +220,12 @@ export function Player({
       rigidBody.current.setTranslation({ x: 0, y: 0.05, z: 0 }, true);
       rigidBody.current.setLinvel({ x: 0, y: 0, z: 0 }, true);
       rigidBody.current.setAngvel({ x: 0, y: 0, z: 0 }, true);
+      rigidBody.current.setRotation({ x: 0, y: 0, z: 0, w: 1 }, true);
+      isBodyCorrectingRef.current = false;
+      turnAnticipationRef.current.targetAngle = 0;
+      if (group.current) {
+        group.current.quaternion.identity();
+      }
       hasInitFreeCamRef.current = false;
     }
   }, [resetTrigger]);
