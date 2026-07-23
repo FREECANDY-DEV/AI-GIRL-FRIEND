@@ -631,13 +631,6 @@ export function Player({
           setBoneRot(leftHand.current, 0, 0, 0, lerpSpeed);
         }
 
-        // Recover head/neck/shoulders/eyes when not explicitly dragged or moved
-        setBoneRot(neck.current, 0, 0, 0, lerpSpeed);
-        setBoneRot(rightShoulder.current, 0, 0, 0, lerpSpeed);
-        setBoneRot(leftShoulder.current, 0, 0, 0, lerpSpeed);
-        setBoneRot(rightEye.current, 0, 0, 0, lerpSpeed);
-        setBoneRot(leftEye.current, 0, 0, 0, lerpSpeed);
-
         // Apply any active custom standing pose bone rotations
         if (standingPose?.customBoneRotations) {
           Object.entries(standingPose.customBoneRotations).forEach(([bName, [rx, ry, rz]]) => {
@@ -648,6 +641,17 @@ export function Player({
           });
         }
       }
+
+      // ALWAYS recover head/neck/shoulders/eyes when not explicitly driven by an animation clip
+      const clipBones = (activeIdleClip && activeIdleClip.keyframes.length > 0) 
+        ? new Set(activeIdleClip.keyframes.flatMap(k => Object.keys(k.transforms))) 
+        : new Set();
+
+      if (!clipBones.has('Neck')) setBoneRot(neck.current, 0, 0, 0, lerpSpeed);
+      if (!clipBones.has('RightShoulder')) setBoneRot(rightShoulder.current, 0, 0, 0, lerpSpeed);
+      if (!clipBones.has('LeftShoulder')) setBoneRot(leftShoulder.current, 0, 0, 0, lerpSpeed);
+      if (!clipBones.has('RightEye')) setBoneRot(rightEye.current, 0, 0, 0, lerpSpeed);
+      if (!clipBones.has('LeftEye')) setBoneRot(leftEye.current, 0, 0, 0, lerpSpeed);
     }
 
       // Apply procedural camera look-at tracking ON TOP of any idle/walking animation
