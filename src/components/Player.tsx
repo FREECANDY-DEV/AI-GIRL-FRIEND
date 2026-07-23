@@ -746,7 +746,7 @@ export function Player({
 
       const targetPos = new THREE.Vector3();
       if (raycaster.ray.intersectPlane(dragPlaneRef.current, targetPos)) {
-        rotateSingleHeldBoneToTarget(draggedBoneNameRef.current, targetPos);
+        handleBoneDragIK(draggedBoneNameRef.current, targetPos);
       }
     };
 
@@ -773,25 +773,71 @@ export function Player({
     };
   }, [camera, orbitControlsRef]);
 
-  const rotateSingleHeldBoneToTarget = (bName: string, targetPos: THREE.Vector3) => {
+  const handleBoneDragIK = (bName: string, targetPos: THREE.Vector3) => {
     const boneObj = scene.getObjectByName(bName) as THREE.Bone | null;
     if (!boneObj) return;
 
-    // Get current world position of the held bone
+    // Identify if the dragged bone is part of an IK limb chain
+    let rootName: string | null = null;
+    let middleName: string | null = null;
+
+    if (bName.includes('Hand') || bName.includes('Foot') || bName.includes('ForeArm') || bName.includes('Leg')) {
+      if (bName.includes('LeftArm') || bName.includes('LeftForeArm') || bName.includes('LeftHand')) {
+        rootName = 'LeftArm'; middleName = 'LeftForeArm';
+      } else if (bName.includes('RightArm') || bName.includes('RightForeArm') || bName.includes('RightHand')) {
+        rootName = 'RightArm'; middleName = 'RightForeArm';
+      } else if (bName.includes('LeftUpLeg') || bName.includes('LeftLeg') || bName.includes('LeftFoot')) {
+        rootName = 'LeftUpLeg'; middleName = 'LeftLeg';
+      } else if (bName.includes('RightUpLeg') || bName.includes('RightLeg') || bName.includes('RightFoot')) {
+        rootName = 'RightUpLeg'; middleName = 'RightLeg';
+      }
+    }
+
+    // If we grabbed an arm/leg bone, pull the ROOT (Shoulder/Hip) towards the target
+    // This creates a highly natural look where the entire limb aims at the mouse, rather than just the wrist twisting.
+    if (rootName && middleName && (bName.includes('Hand') || bName.includes('Foot') || bName.includes('ForeArm') || bName.includes('Leg'))) {
+      const rootBone = scene.getObjectByName(rootName) as THREE.Bone;
+      if (rootBone) {
+        const rootWorldPos = rootBone.getWorldPosition(new THREE.Vector3());
+        const pullDir = targetPos.clone().sub(rootWorldPos).normalize();
+        
+        const parentWorldQ = new THREE.Quaternion();
+        if (rootBone.parent) rootBone.parent.getWorldQuaternion(parentWorldQ);
+        
+        const localDir = pullDir.clone().applyQuaternion(parentWorldQ.clone().invert());
+        const defaultLocalDir = new THREE.Vector3(0, 1, 0); // Mixamo limbs point down +Y locally
+        
+        // Slerp the ROOT bone towards the target
+        const targetLocalQ = new THREE.Quaternion().setFromUnitVectors(defaultLocalDir, localDir);
+        rootBone.quaternion.slerp(targetLocalQ, 0.5);
+        
+        // Optionally add a slight natural bend to the elbow/knee
+        const middleBone = scene.getObjectByName(middleName) as THREE.Bone;
+        if (middleBone) {
+          // Mixamo elbows usually bend on +Z or +X. Let's apply a slight natural flex.
+          const flexAxis = bName.includes('Leg') ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 0, 1);
+          const flexQ = new THREE.Quaternion().setFromAxisAngle(flexAxis, 0.4);
+          // Slerp towards a slightly flexed resting state so the limb doesn't look completely rigid
+          middleBone.quaternion.slerp(flexQ, 0.2);
+        }
+        return;
+      }
+    }
+
+    // Fallback for Torso, Head, Shoulders: Standard directional pull
     const boneWorldPos = boneObj.getWorldPosition(new THREE.Vector3());
     const pullDir = targetPos.clone().sub(boneWorldPos).normalize();
 
-    // Convert target world direction vector to bone's local coordinate space
     const parentWorldQ = new THREE.Quaternion();
     if (boneObj.parent) {
       boneObj.parent.getWorldQuaternion(parentWorldQ);
     }
 
     const localDir = pullDir.clone().applyQuaternion(parentWorldQ.clone().invert());
-    const defaultLocalDir = new THREE.Vector3(0, 1, 0); // Default bone axis direction
+    const defaultLocalDir = new THREE.Vector3(0, 1, 0);
 
     const targetLocalQ = new THREE.Quaternion().setFromUnitVectors(defaultLocalDir, localDir);
-    boneObj.quaternion.slerp(targetLocalQ, 0.4);
+    boneObj.quaternion.slerp(targetLocalQ, 0.6);
   };
 
   return (
