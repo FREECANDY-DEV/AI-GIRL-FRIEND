@@ -2,7 +2,7 @@ import { useGLTF } from '@react-three/drei';
 import { RigidBody } from '@react-three/rapier';
 
 export function Laptop({ position }: { position: [number, number, number] }) {
-  const { scene } = useGLTF('/laptop.glb');
+  const { scene } = useGLTF(import.meta.env.BASE_URL + 'laptop.glb');
 
   return (
     <RigidBody type="fixed" colliders="cuboid">
@@ -11,4 +11,4 @@ export function Laptop({ position }: { position: [number, number, number] }) {
   );
 }
 
-useGLTF.preload('/laptop.glb');
+useGLTF.preload(import.meta.env.BASE_URL + 'laptop.glb');

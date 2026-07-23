@@ -66,6 +66,11 @@ export function Player({
   const leftForeArm = useRef<THREE.Bone | null>(null);
   const rightHand = useRef<THREE.Bone | null>(null);
   const leftHand = useRef<THREE.Bone | null>(null);
+  const neck = useRef<THREE.Bone | null>(null);
+  const rightShoulder = useRef<THREE.Bone | null>(null);
+  const leftShoulder = useRef<THREE.Bone | null>(null);
+  const rightEye = useRef<THREE.Bone | null>(null);
+  const leftEye = useRef<THREE.Bone | null>(null);
 
   const timeRef = useRef(0);
   const idleTimeRef = useRef(0);
@@ -196,6 +201,11 @@ export function Player({
           if (bone.name === 'LeftForeArm') leftForeArm.current = bone;
           if (bone.name === 'RightHand') rightHand.current = bone;
           if (bone.name === 'LeftHand') leftHand.current = bone;
+          if (bone.name === 'Neck') neck.current = bone;
+          if (bone.name === 'RightShoulder') rightShoulder.current = bone;
+          if (bone.name === 'LeftShoulder') leftShoulder.current = bone;
+          if (bone.name === 'RightEye') rightEye.current = bone;
+          if (bone.name === 'LeftEye') leftEye.current = bone;
         }
       });
     }
@@ -620,6 +630,13 @@ export function Player({
           setBoneRot(leftForeArm.current, 0.1, 0, 0, lerpSpeed);
           setBoneRot(leftHand.current, 0, 0, 0, lerpSpeed);
         }
+
+        // Recover head/neck/shoulders/eyes when not explicitly dragged or moved
+        setBoneRot(neck.current, 0, 0, 0, lerpSpeed);
+        setBoneRot(rightShoulder.current, 0, 0, 0, lerpSpeed);
+        setBoneRot(leftShoulder.current, 0, 0, 0, lerpSpeed);
+        setBoneRot(rightEye.current, 0, 0, 0, lerpSpeed);
+        setBoneRot(leftEye.current, 0, 0, 0, lerpSpeed);
 
         // Apply any active custom standing pose bone rotations
         if (standingPose?.customBoneRotations) {
