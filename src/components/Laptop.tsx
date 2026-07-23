@@ -63,31 +63,43 @@ export function Laptop({ position, onOpenDesktop }: LaptopProps) {
       <group ref={laptopRef} onClick={handleClick} onPointerOver={() => { document.body.style.cursor = isNear ? 'pointer' : 'default' }} onPointerOut={() => { document.body.style.cursor = 'default' }}>
         <primitive object={scene} scale={0.1} rotation={[0, -Math.PI / 4, 0]} />
         
-        {/* Screen Glow */}
-        <pointLight position={[0, 0.15, 0.1]} color="#3b82f6" intensity={2} distance={3} />
-        <pointLight position={[0, 0.15, 0.1]} color="#ffffff" intensity={0.5} distance={1} />
+        {/* Screen Glow projecting outwards */}
+        <spotLight 
+          position={[0, 0.15, 0.05]} 
+          angle={Math.PI / 3} 
+          penumbra={0.8} 
+          color="#3b82f6" 
+          intensity={15} 
+          distance={4} 
+          castShadow 
+        />
+        <pointLight position={[0, 0.15, 0.05]} color="#ffffff" intensity={0.5} distance={0.5} />
 
-        {/* Ubuntu Login Screen Overlay (Approximated onto the screen) */}
+        {/* Ubuntu Login Screen Overlay */}
         <Html 
           transform 
-          position={[-0.1, 0.16, -0.1]} 
-          rotation={[-0.1, -Math.PI / 4, 0]} 
-          scale={0.03}
+          position={[0, 0.17, -0.065]} 
+          rotation={[-0.15, -Math.PI / 4, 0]} 
+          scale={0.025}
           occlude
         >
           <div 
-            className="w-[300px] h-[200px] bg-slate-900 flex flex-col items-center justify-center rounded border-2 border-slate-800 shadow-[0_0_20px_rgba(59,130,246,0.5)] cursor-pointer"
+            className="w-[400px] h-[250px] flex flex-col items-center justify-center rounded overflow-hidden shadow-[0_0_30px_rgba(59,130,246,0.6)] cursor-pointer bg-cover bg-center"
+            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1623345805780-8f01f714e65f?q=80&w=2000&auto=format&fit=crop')" }}
             onClick={handleClick}
           >
-            <div className="w-16 h-16 bg-slate-800 rounded-full mb-3 flex items-center justify-center border border-slate-700 shadow-inner">
-              <span className="text-3xl">👤</span>
-            </div>
-            <div className="text-white text-lg font-bold mb-1">Ubuntu</div>
-            <div className="text-slate-400 text-xs mb-3">user</div>
-            <div className="w-48 h-8 bg-slate-800 rounded border border-slate-700 flex items-center px-3 shadow-inner">
-              <div className="w-2 h-2 rounded-full bg-slate-500 mr-1 animate-pulse"></div>
-              <div className="w-2 h-2 rounded-full bg-slate-500 mr-1 animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-              <div className="w-2 h-2 rounded-full bg-slate-500 animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+            
+            <div className="relative z-10 flex flex-col items-center">
+              <div className="w-20 h-20 bg-slate-800 rounded-full mb-4 flex items-center justify-center border-2 border-white/20 shadow-lg overflow-hidden">
+                <span className="text-4xl">👤</span>
+              </div>
+              <div className="text-white text-xl font-medium tracking-wide mb-6 drop-shadow-md">user</div>
+              
+              <div className="w-64 h-10 bg-slate-800/80 rounded-md border border-white/10 flex items-center px-4 shadow-inner backdrop-blur-md">
+                <span className="text-slate-400 text-sm">Password</span>
+                <div className="ml-auto w-1 h-4 bg-white/50 animate-pulse"></div>
+              </div>
             </div>
           </div>
         </Html>
