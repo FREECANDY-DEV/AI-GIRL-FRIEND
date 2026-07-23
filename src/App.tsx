@@ -5,15 +5,20 @@
 
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Grid, ContactShadows, Stars } from '@react-three/drei';
+import { EffectComposer, Bloom, Noise, HueSaturation, BrightnessContrast } from '@react-three/postprocessing';
 import { Physics, RigidBody, CuboidCollider } from '@react-three/rapier';
 import { useState, useEffect, useRef, Suspense } from 'react';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
+import * as THREE from 'three';
 import { Player } from './components/Player';
 import { JoystickControls } from './components/JoystickControls';
 import { AnimationLab } from './components/AnimationLab';
 import { AnimationLibrary } from './components/AnimationLibrary';
 import { StreetLightPole } from './components/StreetLightPole';
+import { Wand2 } from 'lucide-react';
+import { SceneSettingsPanel } from './components/SceneSettingsPanel';
 import { StandingPoseConfig, AnimationClip, PosePreset } from './types/animation';
+import { SceneConfig, DEFAULT_SCENE_CONFIG } from './types/scene';
 import { DEFAULT_STANDING_POSE, DEFAULT_CLIPS, POSE_PRESETS } from './data/defaultAnimations';
 import { Sparkles, Layers, Gamepad2, Sliders, Move, X, MessageSquare, Send, Volume2, VolumeX, Loader2, Eye, History, Save, ArrowUp, ArrowDown, Check, RotateCcw, Menu } from 'lucide-react';
 import { generateGLMResponse, speakFemaleTTS } from './utils/aiCompanion';

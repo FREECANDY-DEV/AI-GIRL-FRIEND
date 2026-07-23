@@ -12,10 +12,10 @@ export function SkeletonVisualizer({ root, visible = true }: SkeletonVisualizerP
     if (!root || !visible) return null;
     const h = new THREE.SkeletonHelper(root);
     if (h.material instanceof THREE.LineBasicMaterial) {
-      h.material.linewidth = 1;
-      h.material.depthTest = true; // Respects depth so it sits cleanly inside avatar mesh
+      h.material.linewidth = 2;
+      h.material.depthTest = false; // Render on top of the avatar mesh
       h.material.transparent = true;
-      h.material.opacity = 0.55;
+      h.material.opacity = 1.0;
       h.material.color = new THREE.Color('#38bdf8'); // Minimalist sleek sky-blue
     }
     return h;

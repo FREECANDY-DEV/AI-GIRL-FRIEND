@@ -11,7 +11,7 @@ import { History } from 'lucide-react';
 
 interface PlayerProps {
   joystickMove: { x: number; y: number };
-  showSkeleton: boolean;
+  showSkeleton?: boolean;
   orbitControlsRef: React.RefObject<OrbitControlsImpl | null>;
   standingPose?: StandingPoseConfig;
   activeWalkClip?: AnimationClip | null;
