@@ -2,7 +2,7 @@ import { useGLTF, Html } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useRef, useMemo, useState } from 'react';
 import * as THREE from 'three';
-import { RigidBody, RapierRigidBody, CapsuleCollider } from '@react-three/rapier';
+import { RigidBody, RapierRigidBody, CapsuleCollider, useRapier } from '@react-three/rapier';
 import { SkeletonUtils, type OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { SkeletonVisualizer } from './SkeletonVisualizer';
 import { StandingPoseConfig, AnimationClip } from '../types/animation';
@@ -112,6 +112,42 @@ export function Player({
       window.removeEventListener('tts-end', onEnd);
     };
   }, []);
+
+
+
+  const { rapier, world } = useRapier();
+  const braceWeightsRef = useRef({ left: 0, right: 0 });
+
+  const applyBraceIK = (bName: string, deltaQ: THREE.Quaternion) => {
+    const lw = braceWeightsRef.current.left;
+    const rw = braceWeightsRef.current.right;
+
+    if (lw > 0.01) {
+      if (bName === 'LeftArm') {
+        const braceQ = new THREE.Quaternion().setFromEuler(new THREE.Euler(-60 * Math.PI/180, 20 * Math.PI/180, 20 * Math.PI/180, 'YXZ'));
+        deltaQ.slerp(braceQ, lw);
+      } else if (bName === 'LeftForeArm') {
+        const braceQ = new THREE.Quaternion().setFromEuler(new THREE.Euler(70 * Math.PI/180, 0, 0, 'YXZ'));
+        deltaQ.slerp(braceQ, lw);
+      } else if (bName === 'LeftHand') {
+        const braceQ = new THREE.Quaternion().setFromEuler(new THREE.Euler(-40 * Math.PI/180, 0, 0, 'YXZ'));
+        deltaQ.slerp(braceQ, lw);
+      }
+    }
+
+    if (rw > 0.01) {
+      if (bName === 'RightArm') {
+        const braceQ = new THREE.Quaternion().setFromEuler(new THREE.Euler(-60 * Math.PI/180, -20 * Math.PI/180, -20 * Math.PI/180, 'YXZ'));
+        deltaQ.slerp(braceQ, rw);
+      } else if (bName === 'RightForeArm') {
+        const braceQ = new THREE.Quaternion().setFromEuler(new THREE.Euler(70 * Math.PI/180, 0, 0, 'YXZ'));
+        deltaQ.slerp(braceQ, rw);
+      } else if (bName === 'RightHand') {
+        const braceQ = new THREE.Quaternion().setFromEuler(new THREE.Euler(-40 * Math.PI/180, 0, 0, 'YXZ'));
+        deltaQ.slerp(braceQ, rw);
+      }
+    }
+  };
 
   useEffect(() => {
     if (scene) {
@@ -262,6 +298,36 @@ export function Player({
       .addScaledVector(cameraDirection, joystickMove.y)
       .addScaledVector(cameraRight, joystickMove.x);
 
+    // ----------------------------------------------------
+    // Bracing Anticipation (Raycast for obstacles)
+    // ----------------------------------------------------
+    const originPos = rigidBody.current.translation();
+    const braceOrigin = new THREE.Vector3(originPos.x, originPos.y + 1.2, originPos.z);
+    // Use the current physical body angle to determine forward
+    const braceYaw = group.current.rotation.y;
+    
+    const maxRayDist = 0.7; // Check 70cm ahead
+    const capsuleRadius = 0.55; // Start just outside the capsule to avoid self-collision
+
+    // Left ray (angled slightly left)
+    const dirLeft = new THREE.Vector3(Math.sin(braceYaw + 0.35), 0, Math.cos(braceYaw + 0.35)).normalize();
+    const startLeft = braceOrigin.clone().add(dirLeft.clone().multiplyScalar(capsuleRadius));
+    const rayLeft = new rapier.Ray(startLeft, dirLeft);
+    const hitLeft = world.castRay(rayLeft, maxRayDist, true);
+    
+    // Right ray (angled slightly right)
+    const dirRight = new THREE.Vector3(Math.sin(braceYaw - 0.35), 0, Math.cos(braceYaw - 0.35)).normalize();
+    const startRight = braceOrigin.clone().add(dirRight.clone().multiplyScalar(capsuleRadius));
+    const rayRight = new rapier.Ray(startRight, dirRight);
+    const hitRight = world.castRay(rayRight, maxRayDist, true);
+
+    // Target weights
+    const targetLWeight = hitLeft && (hitLeft as any).toi < maxRayDist ? 1.0 - ((hitLeft as any).toi / maxRayDist) : 0;
+    const targetRWeight = hitRight && (hitRight as any).toi < maxRayDist ? 1.0 - ((hitRight as any).toi / maxRayDist) : 0;
+
+    braceWeightsRef.current.left = THREE.MathUtils.lerp(braceWeightsRef.current.left, targetLWeight, 12 * delta);
+    braceWeightsRef.current.right = THREE.MathUtils.lerp(braceWeightsRef.current.right, targetRWeight, 12 * delta);
+
     const isMoving = !isFreeCamera && moveVector.lengthSq() > 0.01;
 
     // Free Camera Movement (Move camera in 3D space instead of character)
@@ -407,6 +473,7 @@ export function Player({
           );
 
           const deltaQ = qA.slerp(qB, factor);
+          applyBraceIK(bName, deltaQ);
           const targetQ = initQ.clone().multiply(deltaQ);
           bone.quaternion.slerp(targetQ, Math.min(1, 16 * delta));
         });
@@ -617,6 +684,7 @@ export function Player({
           );
 
           const deltaQ = qA.slerp(qB, factor);
+          applyBraceIK(bName, deltaQ);
           const targetQ = initQ.clone().multiply(deltaQ);
           bone.quaternion.slerp(targetQ, Math.min(1, 12 * delta));
         });
