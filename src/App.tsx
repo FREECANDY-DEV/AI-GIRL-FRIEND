@@ -16,6 +16,7 @@ import { AnimationLibrary } from './components/AnimationLibrary';
 import { StreetLightPole } from './components/StreetLightPole';
 import { Laptop } from './components/Laptop';
 import { BackgroundMusic } from './components/BackgroundMusic';
+import { DonationWidget } from './components/DonationWidget';
 import { UbuntuDesktop } from './components/UbuntuDesktop';
 import { CharacterProfile } from './components/CharacterProfile';
 import { Wand2 } from 'lucide-react';
@@ -436,6 +437,7 @@ export default function App() {
   return (
     <div className="w-full h-screen bg-slate-950 relative flex items-center overflow-hidden touch-none select-none">
       <BackgroundMusic />
+      <DonationWidget />
       {/* Left-Side Chat History Panel */}
       {isHistoryOpen && (
         <aside className="w-80 sm:w-96 shrink-0 h-full bg-slate-900/95 border-r border-slate-800 shadow-2xl backdrop-blur-xl flex flex-col z-20 pointer-events-auto transition-all duration-300">
@@ -485,7 +487,7 @@ export default function App() {
       {/* Center Main Viewport (Resizes dynamically when left/right panels open) */}
       <main className="flex-1 h-full relative overflow-hidden flex items-center justify-center">
         {/* Top Header Navigation Bar - Minimalist Expandable Toolbar */}
-        <div className="absolute top-3 right-3 z-20 pointer-events-auto flex items-center gap-2">
+        <div className="absolute top-3 right-3 z-20 pointer-events-auto flex items-center gap-2 flex-row-reverse">
           {/* Main Expand/Collapse Toolbar Toggle Button */}
           <button
             onClick={() => setIsToolbarExpanded(!isToolbarExpanded)}
@@ -501,7 +503,7 @@ export default function App() {
 
           {/* Expanded Options Toolbar Container */}
           {isToolbarExpanded && (
-            <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-3 duration-200">
+            <div className="flex items-center gap-2 flex-row-reverse animate-in fade-in slide-in-from-right-3 duration-200">
               {/* Reset Model Position & Camera View Icon-Only Button */}
               <button
                 onClick={handleResetModelAndCamera}
