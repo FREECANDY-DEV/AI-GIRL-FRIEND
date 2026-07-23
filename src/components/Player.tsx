@@ -48,7 +48,8 @@ export function Player({
   const rigidBody = useRef<RapierRigidBody>(null);
   const { scene: gltfScene } = useGLTF(`${import.meta.env.BASE_URL}model.glb`);
   const scene = useMemo(() => SkeletonUtils.clone(gltfScene), [gltfScene]);
-  const footprintTex = useLoader(THREE.TextureLoader, `${import.meta.env.BASE_URL}footprint.jpg`);
+  const leftFootprintTex = useLoader(THREE.TextureLoader, `${import.meta.env.BASE_URL}left_footprint.jpg`);
+  const rightFootprintTex = useLoader(THREE.TextureLoader, `${import.meta.env.BASE_URL}right_footprint.jpg`);
 
   // Refs for bones
   const hips = useRef<THREE.Bone | null>(null);
@@ -465,13 +466,15 @@ export function Player({
             pos.x -= Math.sin(bodyAngle) * backOffset;
             pos.z -= Math.cos(bodyAngle) * backOffset;
 
+            const currentFootTex = stepSideRef.current ? rightFootprintTex : leftFootprintTex;
+
             const mesh = new THREE.Mesh(
               footprintGeo,
               new THREE.MeshBasicMaterial({ 
                 color: new THREE.Color('#06b6d4'),
                 transparent: true, 
                 opacity: 0.8, 
-                alphaMap: footprintTex,
+                alphaMap: currentFootTex,
                 depthWrite: false,
                 blending: THREE.AdditiveBlending,
                 side: THREE.DoubleSide
@@ -479,8 +482,7 @@ export function Player({
             );
             mesh.rotation.x = -Math.PI / 2;
             mesh.rotation.z = -bodyAngle;
-            // Mirror the left footprint texture
-            mesh.scale.x = stepSideRef.current ? 1 : -1;
+            // Removed scale.x mirroring since we now have dedicated left/right textures
             mesh.position.copy(pos);
             footprintsGroupRef.current.add(mesh);
           }
