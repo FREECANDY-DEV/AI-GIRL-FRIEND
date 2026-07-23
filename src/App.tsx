@@ -212,7 +212,34 @@ export default function App() {
   // Active walk & idle clip objects used by Player in the game map
   const activeWalkClip = customClips.find((c) => c.id === activeWalkClipId) || customClips[0] || null;
   const hasUserPrompted = chatHistory.length > 0;
-  const idleClipId = hasUserPrompted ? 'breathing_idle' : 'wave_hello';
+  
+  const [isRandomWaving, setIsRandomWaving] = useState(false);
+
+  useEffect(() => {
+    if (hasUserPrompted) {
+      setIsRandomWaving(false);
+      return;
+    }
+
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    const scheduleWave = () => {
+      const nextWaveDelay = 3000 + Math.random() * 6000; // 3 to 9 seconds
+      timeoutId = setTimeout(() => {
+        setIsRandomWaving(true);
+        timeoutId = setTimeout(() => {
+          setIsRandomWaving(false);
+          scheduleWave();
+        }, 1400); // Expressive wave is 1.4s long
+      }, nextWaveDelay);
+    };
+
+    scheduleWave();
+
+    return () => clearTimeout(timeoutId);
+  }, [hasUserPrompted]);
+
+  const idleClipId = (!hasUserPrompted && isRandomWaving) ? 'wave_hello' : 'breathing_idle';
   const activeIdleClip = customClips.find((c) => c.id === idleClipId) || customClips[0] || null;
 
   // Resolve the active thinking pose
