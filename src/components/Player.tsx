@@ -125,8 +125,9 @@ export function Player({
   const lastStepDistRef = useRef(0);
   const stepSideRef = useRef(false);
   const footprintGeo = useMemo(() => {
-    const geo = new THREE.CircleGeometry(0.12, 16);
-    geo.scale(1, 1.8, 1);
+    // The user's custom textures are oriented sideways (landscape),
+    // so we use a landscape PlaneGeometry (Length, Width)
+    const geo = new THREE.PlaneGeometry(0.32, 0.14);
     return geo;
   }, []);
 
@@ -481,7 +482,9 @@ export function Player({
               })
             );
             mesh.rotation.x = -Math.PI / 2;
-            mesh.rotation.z = -bodyAngle;
+            // The texture is oriented sideways, so add 90 degrees (Math.PI / 2) 
+            // so the toe points in the direction the character is facing
+            mesh.rotation.z = -bodyAngle + Math.PI / 2;
             // Removed scale.x mirroring since we now have dedicated left/right textures
             mesh.position.copy(pos);
             footprintsGroupRef.current.add(mesh);
