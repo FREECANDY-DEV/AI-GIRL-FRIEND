@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+/* Custom Sleek Industrial Dark Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #090d16;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 9999px;
+  border: 1px solid #1e293b;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Firefox scrollbar support */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #334155 #090d16;
+}
+
+/* Ultra-Intense Animated Film Grain & Atmospheric Noise Effect Overlay */
+@keyframes film-grain-shake {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-3px, -4px); }
+  20% { transform: translate(4px, 2px); }
+  30% { transform: translate(-2px, 3px); }
+  40% { transform: translate(3px, -3px); }
+  50% { transform: translate(-4px, 2px); }
+  60% { transform: translate(2px, -4px); }
+  70% { transform: translate(4px, 3px); }
+  80% { transform: translate(-3px, -2px); }
+  90% { transform: translate(3px, 4px); }
+}
+
+.film-grain-overlay {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='filmGrainNoise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='5' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='1.5 0 0 0 -0.15  0 1.5 0 0 -0.15  0 0 1.5 0 -0.15  0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23filmGrainNoise)'/%3E%3C/svg%3E");
+  animation: film-grain-shake 0.10s steps(10) infinite;
+}
+
+/* Deep Film Vignette Frame */
+.film-vignette {
+  background: radial-gradient(circle at center, transparent 35%, rgba(2, 6, 23, 0.55) 85%, rgba(2, 6, 23, 0.88) 100%);
+}

@@ -1,0 +1,6 @@
+{
+  "name": "3D Game Map Prototype",
+  "description": "A 3D blank grid with a white box, built as the foundation for a web game.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
