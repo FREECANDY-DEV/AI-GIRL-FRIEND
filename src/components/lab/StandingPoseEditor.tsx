@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { StandingPoseConfig, PosePreset } from '../../types/animation';
 import { PosePresets } from './PosePresets';
 import { BoneHierarchyTree } from './BoneHierarchyTree';
@@ -44,6 +44,7 @@ interface StandingPoseEditorProps {
   onDeleteCustomPose?: (id: string) => void;
   defaultBasePose?: StandingPoseConfig;
   onSetAsDefaultBasePose?: (pose: StandingPoseConfig) => void;
+  editingPosePreset?: PosePreset | null;
 }
 
 export function StandingPoseEditor({
@@ -68,6 +69,7 @@ export function StandingPoseEditor({
   onDeleteCustomPose,
   defaultBasePose,
   onSetAsDefaultBasePose,
+  editingPosePreset = null,
 }: StandingPoseEditorProps) {
   const [savedNotifier, setSavedNotifier] = useState(false);
   const [defaultPoseNotifier, setDefaultPoseNotifier] = useState(false);
@@ -76,6 +78,12 @@ export function StandingPoseEditor({
   const [showSavePresetInput, setShowSavePresetInput] = useState(false);
   const [isAdjustmentsCollapsed, setIsAdjustmentsCollapsed] = useState(false);
   const [isBodyTransformCollapsed, setIsBodyTransformCollapsed] = useState(false);
+
+  useEffect(() => {
+    if (editingPosePreset) {
+      setPresetTitle(editingPosePreset.name);
+    }
+  }, [editingPosePreset]);
 
   const [rx, ry, rz] = rotation;
   const isLocked = lockedBones.has(selectedBone);
@@ -126,6 +134,14 @@ export function StandingPoseEditor({
   const handleSavePose = () => {
     const merged = buildMergedPoseConfig();
     onChangeConfig(merged);
+
+    if (editingPosePreset && onSaveCustomPose) {
+      onSaveCustomPose({
+        ...editingPosePreset,
+        pose: merged,
+      });
+    }
+
     setSavedNotifier(true);
     setTimeout(() => setSavedNotifier(false), 1800);
   };
@@ -134,9 +150,9 @@ export function StandingPoseEditor({
     if (!presetTitle.trim()) return;
     const merged = buildMergedPoseConfig();
     const newPreset: PosePreset = {
-      id: `pose_${Date.now()}`,
+      id: editingPosePreset && presetTitle.trim() === editingPosePreset.name ? editingPosePreset.id : `pose_${Date.now()}`,
       name: presetTitle.trim(),
-      description: 'Custom user pose created in 3D Studio',
+      description: editingPosePreset ? editingPosePreset.description : 'Custom user pose created in 3D Studio',
       pose: merged,
     };
 

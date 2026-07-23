@@ -425,7 +425,7 @@ export function AnimationLibrary({
                       {/* 3D Animated Card Canvas */}
                       <div className="w-full h-48 relative cursor-pointer" onClick={() => {
                         onUpdateStandingPose(preset.pose);
-                        onOpenLab('pose');
+                        onOpenLab('pose', preset.id);
                       }}>
                         <CardPreviewCanvas pose={preset.pose} autoRotate={true} />
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-60 pointer-events-none" />
@@ -452,7 +452,7 @@ export function AnimationLibrary({
                           <button
                             onClick={() => {
                               onUpdateStandingPose(preset.pose);
-                              onOpenLab('pose');
+                              onOpenLab('pose', preset.id);
                             }}
                             className="flex-1 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] flex items-center justify-center gap-1 transition"
                             title="Edit this pose in 3D Studio Laboratory"

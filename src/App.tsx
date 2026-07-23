@@ -63,8 +63,8 @@ export default function App() {
   const [isTtsEnabled, setIsTtsEnabled] = useState(true);
 
   // Target config when opening the 3D studio lab from the animation library
-  const [labConfig, setLabConfig] = useState<{ mode: 'timeline' | 'pose'; clipId?: string }>({
-    mode: 'timeline',
+  const [labConfig, setLabConfig] = useState<{ mode: 'timeline' | 'pose'; clipId?: string; poseId?: string }>({
+    mode: 'pose',
   });
 
   // Standing Pose state (Persisted in LocalStorage)
@@ -285,7 +285,7 @@ export default function App() {
   };
 
   const handleOpenLab = (mode: 'timeline' | 'pose', targetId?: string) => {
-    setLabConfig({ mode, clipId: targetId });
+    setLabConfig({ mode, clipId: mode === 'timeline' ? targetId : undefined, poseId: mode === 'pose' ? targetId : undefined });
     setCurrentView('lab');
   };
 
@@ -339,6 +339,7 @@ export default function App() {
         onUpdateCustomPoses={setCustomPoses}
         initialMode={labConfig.mode}
         initialClipId={labConfig.clipId}
+        initialPoseId={labConfig.poseId}
       />
     );
   }

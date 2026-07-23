@@ -7,7 +7,7 @@ import { Timeline } from './lab/Timeline';
 import { BoneInspector } from './lab/BoneInspector';
 import { StandingPoseEditor } from './lab/StandingPoseEditor';
 import { AnimationClip, StandingPoseConfig, PosePreset } from '../types/animation';
-import { DEFAULT_CLIPS, DEFAULT_STANDING_POSE } from '../data/defaultAnimations';
+import { DEFAULT_CLIPS, DEFAULT_STANDING_POSE, POSE_PRESETS } from '../data/defaultAnimations';
 import { getMirroredBone, getInterpolatedBoneRotation } from '../utils/humanPhysics';
 import { BONE_LABELS } from './lab/LabModel';
 import {
@@ -44,6 +44,7 @@ interface AnimationLabProps {
   onUpdateCustomPoses?: (poses: PosePreset[]) => void;
   initialMode?: 'timeline' | 'pose';
   initialClipId?: string;
+  initialPoseId?: string;
 }
 
 export function AnimationLab({
@@ -58,6 +59,7 @@ export function AnimationLab({
   onUpdateCustomPoses,
   initialMode = 'timeline',
   initialClipId,
+  initialPoseId,
 }: AnimationLabProps) {
   const [activeTab, setActiveTab] = useState<'timeline' | 'pose'>(initialMode);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
@@ -84,6 +86,22 @@ export function AnimationLab({
       ? initialClipId
       : clips[0]?.id || 'walk_cycle'
   );
+
+  const [editingPosePreset, setEditingPosePreset] = useState<PosePreset | null>(null);
+
+  // Initialize selected clip or pose based on props
+  useEffect(() => {
+    if (initialMode === 'timeline' && initialClipId) {
+      setSelectedClipId(initialClipId);
+    }
+    if (initialMode === 'pose' && initialPoseId) {
+      const allPoses = [...POSE_PRESETS, ...customPoses];
+      const preset = allPoses.find(p => p.id === initialPoseId);
+      if (preset) {
+        setEditingPosePreset(preset);
+      }
+    }
+  }, [initialMode, initialClipId, initialPoseId, customPoses]);
 
   const activeClip = clips.find((c) => c.id === selectedClipId) || clips[0];
 
@@ -207,6 +225,7 @@ export function AnimationLab({
 
   // Clear temp bone overrides when scrubbing time or changing clips in timeline mode
   // so keyframe edits remain completely isolated to their respective keyframes!
+
   useEffect(() => {
     if (activeTab === 'timeline') {
       setTempBoneOverrides({});
@@ -1048,6 +1067,7 @@ export function AnimationLab({
                 customPoses={customPoses}
                 onSaveCustomPose={handleSaveCustomPose}
                 onDeleteCustomPose={handleDeleteCustomPose}
+                editingPosePreset={editingPosePreset}
               />
             )}
           </aside>
