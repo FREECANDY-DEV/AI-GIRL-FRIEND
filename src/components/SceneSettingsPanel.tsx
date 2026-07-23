@@ -240,6 +240,55 @@ export function SceneSettingsPanel({ config, onChange, onClose }: SceneSettingsP
               />
             </div>
           </div>
+          
+          <label className="flex items-center gap-2 text-[11px] cursor-pointer mt-4">
+            <input
+              type="checkbox"
+              checked={config.castShadows}
+              onChange={(e) => updateField('castShadows', e.target.checked)}
+              className="accent-emerald-500"
+            />
+            Cast Sun Shadows
+          </label>
+        </section>
+
+        {/* Shadow Settings */}
+        <section className="space-y-4">
+          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+            <Droplets size={12} /> Contact Shadows
+          </h3>
+
+          <div className="space-y-1">
+            <div className="flex justify-between text-[11px]">
+              <span>Shadow Opacity</span>
+              <span className="font-mono text-emerald-400">{config.contactShadowOpacity.toFixed(2)}</span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.05"
+              value={config.contactShadowOpacity}
+              onChange={(e) => updateField('contactShadowOpacity', parseFloat(e.target.value))}
+              className="w-full accent-emerald-500"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <div className="flex justify-between text-[11px]">
+              <span>Shadow Blur</span>
+              <span className="font-mono text-emerald-400">{config.contactShadowBlur.toFixed(1)}</span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="10"
+              step="0.5"
+              value={config.contactShadowBlur}
+              onChange={(e) => updateField('contactShadowBlur', parseFloat(e.target.value))}
+              className="w-full accent-emerald-500"
+            />
+          </div>
         </section>
 
         {/* Post Processing */}

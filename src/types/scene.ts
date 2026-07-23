@@ -17,6 +17,9 @@ export interface SceneConfig {
   brightness: number;
   contrast: number;
   filmGrain: number;
+  castShadows: boolean;
+  contactShadowOpacity: number;
+  contactShadowBlur: number;
 }
 
 export const DEFAULT_SCENE_CONFIG: SceneConfig = {
@@ -38,4 +41,7 @@ export const DEFAULT_SCENE_CONFIG: SceneConfig = {
   brightness: 1.0,
   contrast: 1.0,
   filmGrain: 0.3,
+  castShadows: true,
+  contactShadowOpacity: 0.7,
+  contactShadowBlur: 2.5,
 };

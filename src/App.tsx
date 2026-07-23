@@ -561,8 +561,9 @@ export default function App() {
             position={[sceneConfig.directionalLightPositionX, sceneConfig.directionalLightPositionY, sceneConfig.directionalLightPositionZ]} 
             intensity={sceneConfig.directionalLightIntensity} 
             color={sceneConfig.directionalLightColor} 
-            castShadow 
+            castShadow={sceneConfig.castShadows}
             shadow-mapSize={[1024, 1024]} 
+            shadow-bias={-0.0001}
           />
 
           <OrbitControls
@@ -603,22 +604,22 @@ export default function App() {
               {/* Soft Dynamic Contact Shadow under character feet */}
               <ContactShadows
                 position={[0, 0.001, 0]}
-                opacity={0.8}
+                opacity={sceneConfig.contactShadowOpacity}
                 scale={6}
-                blur={1.8}
+                blur={sceneConfig.contactShadowBlur}
                 far={3.5}
                 color="#000000"
               />
 
               <RigidBody type="fixed">
-                <mesh position={[3, 0.5, 3]} castShadow receiveShadow>
+                <mesh position={[3, 0.5, 3]} castShadow={sceneConfig.castShadows} receiveShadow={sceneConfig.castShadows}>
                   <boxGeometry args={[1, 1, 1]} />
                   <meshStandardMaterial color="#1e293b" roughness={0.3} metalness={0.2} />
                 </mesh>
               </RigidBody>
 
               <RigidBody type="fixed">
-                <mesh position={[-3, 0.5, -2]} castShadow receiveShadow>
+                <mesh position={[-3, 0.5, -2]} castShadow={sceneConfig.castShadows} receiveShadow={sceneConfig.castShadows}>
                   <boxGeometry args={[2, 1, 2]} />
                   <meshStandardMaterial color="#0f172a" roughness={0.4} metalness={0.1} />
                 </mesh>

@@ -680,6 +680,30 @@ export function Player({
         // Smoothly move the orbit target
         orbitControlsRef.current.target.lerp(lookAtTarget, Math.min(1, 12 * delta));
         
+        // Auto-follow camera: rotate camera to align with movement direction when walking forward
+        if (isMoving && joystickMove.y > 0.1) {
+          const offset = camera.position.clone().sub(lookAtTarget);
+          const currentAzimuth = Math.atan2(offset.x, offset.z);
+          
+          const moveAzimuth = Math.atan2(moveVector.x, moveVector.z);
+          let targetAzimuth = moveAzimuth + Math.PI; // Camera should be behind the movement direction
+          
+          let deltaAzimuth = targetAzimuth - currentAzimuth;
+          while (deltaAzimuth > Math.PI) deltaAzimuth -= Math.PI * 2;
+          while (deltaAzimuth < -Math.PI) deltaAzimuth += Math.PI * 2;
+          
+          // Smooth rotation speed, scales with how much forward we are pushing
+          const rotationSpeed = 3.5 * delta * joystickMove.y;
+          
+          if (Math.abs(deltaAzimuth) > 0.01) {
+            const newAzimuth = currentAzimuth + deltaAzimuth * rotationSpeed;
+            const radius = Math.sqrt(offset.x * offset.x + offset.z * offset.z);
+            
+            camera.position.x = lookAtTarget.x + Math.sin(newAzimuth) * radius;
+            camera.position.z = lookAtTarget.z + Math.cos(newAzimuth) * radius;
+          }
+        }
+        
         // Ensure the camera doesn't zoom too far out in OTS mode
         if (orbitControlsRef.current.getDistance() > 3.0) {
            const dir = camera.position.clone().sub(lookAtTarget).normalize();
