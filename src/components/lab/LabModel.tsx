@@ -374,7 +374,8 @@ export function LabModel({
       const initQ = initialQuaternions.current.get(selectedBoneName);
       if (!initQ || !onBoneRotate) return;
 
-      const deltaQ = selectedBoneObj.quaternion.clone().multiply(initQ.clone().invert());
+      // absoluteQ = initQ * deltaQ --> deltaQ = initQ^-1 * absoluteQ
+      const deltaQ = initQ.clone().invert().multiply(selectedBoneObj.quaternion);
       const euler = new THREE.Euler().setFromQuaternion(deltaQ, 'YXZ');
 
       let degX = Math.round((euler.x * 180) / Math.PI);
