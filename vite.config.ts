@@ -109,7 +109,7 @@ function zaiApiProxyPlugin(): Plugin {
 
 export default defineConfig(() => {
   return {
-    base: './',
+    base: '/AI-GIRL-FRIEND/',
     plugins: [react(), tailwindcss(), saveProjectFilesPlugin(), zaiApiProxyPlugin()],
     resolve: {
       alias: {

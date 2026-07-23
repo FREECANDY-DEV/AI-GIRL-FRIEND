@@ -1,5 +1,7 @@
 # 🌌 GridMap Studio — 3D Cyberpunk AI Companion & Studio
 
+**Live Demo:** [Play Now on GitHub Pages](https://freecandy-dev.github.io/AI-GIRL-FRIEND/)
+
 An interactive 3D WebGL web application featuring **Ava**, an AI-powered 3D companion driven by **Z.AI GLM-4.5-Flash** and multilingual female Text-to-Speech (TTS). Built with **React 18**, **Three.js / React Three Fiber**, **Tailwind CSS**, and **Rapier Physics**.
 
 ---
