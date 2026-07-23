@@ -1299,6 +1299,14 @@ export function Player({
         ref={group}
         dispose={null}
         position={[0, 0, 0]}
+        onDoubleClick={(e) => {
+          e.stopPropagation();
+          if (isFreeCamera) {
+            const ouchSound = new Audio(`${import.meta.env.BASE_URL}ouch.wav`);
+            ouchSound.volume = 0.6;
+            ouchSound.play().catch(err => console.error("Could not play sound", err));
+          }
+        }}
         onPointerDown={(e) => {
           e.stopPropagation();
 
