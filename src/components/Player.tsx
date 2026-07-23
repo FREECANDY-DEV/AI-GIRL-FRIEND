@@ -873,11 +873,20 @@ export function Player({
         spine1.current.quaternion.slerp(spine1Target, 4 * delta);
       } else if (isFreeCamera && head.current && neck.current && spine2.current && !isMoving) {
         // In free camera, make the head and eyes follow the exact 3D mouse cursor location!
-        // Unproject the 2D mouse cursor into a 3D point far away in the world
-        const mouseWorld = new THREE.Vector3(state.pointer.x, state.pointer.y, 0.99).unproject(camera);
+        // Calculate a target point on the camera's plane to perfectly track the mouse
+        // without projecting behind the character.
+        const headPos = head.current.getWorldPosition(new THREE.Vector3());
+        
+        const camRight = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
+        const camUp = new THREE.Vector3(0, 1, 0).applyQuaternion(camera.quaternion);
+        
+        // Scale the mouse offset by distance so the tracking remains accurate when zooming
+        const dist = camera.position.distanceTo(headPos);
+        const mouseWorld = camera.position.clone()
+          .add(camRight.multiplyScalar(state.pointer.x * dist * 0.8))
+          .add(camUp.multiplyScalar(state.pointer.y * dist * 0.8));
         
         // Calculate the vector from the character's head to that 3D mouse point
-        const headPos = head.current.getWorldPosition(new THREE.Vector3());
         const headToMouse = mouseWorld.sub(headPos).normalize();
         
         // Calculate the world yaw and pitch required to look at the mouse
