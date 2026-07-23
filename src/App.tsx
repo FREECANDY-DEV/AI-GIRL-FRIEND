@@ -14,6 +14,7 @@ import { JoystickControls } from './components/JoystickControls';
 import { AnimationLab } from './components/AnimationLab';
 import { AnimationLibrary } from './components/AnimationLibrary';
 import { StreetLightPole } from './components/StreetLightPole';
+import { Laptop } from './components/Laptop';
 import { Wand2 } from 'lucide-react';
 import { SceneSettingsPanel } from './components/SceneSettingsPanel';
 import { StandingPoseConfig, AnimationClip, PosePreset } from './types/animation';
@@ -617,6 +618,9 @@ export default function App() {
                   <meshStandardMaterial color="#1e293b" roughness={0.3} metalness={0.2} />
                 </mesh>
               </RigidBody>
+
+              {/* Laptop placed on the cube */}
+              <Laptop position={[3, 1.0, 3]} />
 
               <RigidBody type="fixed">
                 <mesh position={[-3, 0.5, -2]} castShadow={sceneConfig.castShadows} receiveShadow={sceneConfig.castShadows}>
