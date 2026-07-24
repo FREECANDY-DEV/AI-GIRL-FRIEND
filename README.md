@@ -53,6 +53,17 @@
 - **Post-Processing**: Add intense cinematic film grain, bloom, and dynamic vignettes on the fly.
 - **Environmental Controls**: Adjust starry sky density and procedural butterfly particle speeds.
 
+---
+
+### 🎥 4. Cinematic Camera Angles
+> Instantly switch between Free Camera view and an immersive Over-The-Shoulder perspective.
+<div align="center">
+  <img src="docs/screenshots/shoulder.jpg" alt="Over The Shoulder Camera" width="80%" style="border-radius: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.5);" />
+</div>
+
+- **Over-The-Shoulder Tracking**: Camera dynamically follows the character's movements.
+- **Dynamic Eye Tracking**: The character's gaze will naturally follow your cursor or interactions.
+
 <hr />
 
 ## 🚀 Installation & Getting Started
