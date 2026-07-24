@@ -1,16 +1,17 @@
 import { useGLTF, Html } from '@react-three/drei';
 import { RigidBody } from '@react-three/rapier';
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { playerWorldPosition } from './Player';
 
 interface LaptopProps {
-  position: [number, number, number];
+  position?: [number, number, number];
+  rotation?: [number, number, number];
   onOpenDesktop?: () => void;
 }
 
-export function Laptop({ position, onOpenDesktop }: LaptopProps) {
+export function Laptop({ position, rotation, onOpenDesktop }: LaptopProps) {
   const { scene } = useGLTF(import.meta.env.BASE_URL + 'laptop.glb');
   const [isNear, setIsNear] = useState(false);
   const laptopRef = useRef<THREE.Group>(null);
@@ -37,18 +38,17 @@ export function Laptop({ position, onOpenDesktop }: LaptopProps) {
     });
   }, [isNear, scene]);
 
+  // Reference for world position
+  const worldPos = useMemo(() => new THREE.Vector3(), []);
+
   useFrame(() => {
-    if (laptopRef.current) {
-      const worldPos = new THREE.Vector3();
-      laptopRef.current.getWorldPosition(worldPos);
-      
-      const distance = worldPos.distanceTo(playerWorldPosition);
-      const near = distance < 3.0; // 3 meters proximity
-      
-      if (near !== isNear) {
-        setIsNear(near);
-      }
-    }
+    if (!laptopRef.current) return;
+    
+    // Get the actual world position of the laptop inside the RigidBody
+    laptopRef.current.getWorldPosition(worldPos);
+    
+    const dist = playerWorldPosition.distanceTo(worldPos);
+    setIsNear(dist < 2.5); // Highlight if within 2.5 meters
   });
 
   const handleClick = (e: any) => {
@@ -60,7 +60,7 @@ export function Laptop({ position, onOpenDesktop }: LaptopProps) {
 
   return (
     <RigidBody type="dynamic" colliders="cuboid" position={position} mass={1} restitution={0.2} friction={0.8}>
-      <group ref={laptopRef} onClick={handleClick} onPointerOver={() => { document.body.style.cursor = isNear ? 'pointer' : 'default' }} onPointerOut={() => { document.body.style.cursor = 'default' }}>
+      <group ref={laptopRef} rotation={rotation} onClick={handleClick} onPointerOver={() => { document.body.style.cursor = isNear ? 'pointer' : 'default' }} onPointerOut={() => { document.body.style.cursor = 'default' }}>
         <primitive object={scene} scale={0.1} rotation={[0, -Math.PI / 4, 0]} />
         
         {/* Screen Glow */}

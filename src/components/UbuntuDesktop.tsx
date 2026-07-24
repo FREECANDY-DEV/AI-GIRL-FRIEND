@@ -207,6 +207,15 @@ export function UbuntuDesktop({ onClose }: UbuntuDesktopProps) {
         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1542831371-29b0f74f9713?q=80&w=1920')] bg-cover bg-center opacity-30" />
         <div className="absolute inset-0 bg-gradient-to-b from-purple-900/50 to-slate-950/90" />
         
+        <div className="absolute top-4 right-4 flex gap-4 text-white/80 z-20">
+          <span className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center text-[10px] font-bold">EN</span>
+          <span>📶</span>
+          <span>🔋</span>
+          <button onClick={onClose} className="hover:text-red-400 transition ml-2">
+            <X size={18} />
+          </button>
+        </div>
+
         <div className="relative z-10 flex flex-col items-center w-full max-w-sm px-6 text-center">
           <div className="text-6xl font-light text-white mb-12 drop-shadow-md">
             {time.split(',')[0]}

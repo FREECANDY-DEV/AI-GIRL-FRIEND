@@ -19,6 +19,7 @@ import { BackgroundMusic } from './components/BackgroundMusic';
 import { DonationWidget } from './components/DonationWidget';
 import { UbuntuDesktop } from './components/UbuntuDesktop';
 import { CharacterProfile } from './components/CharacterProfile';
+import { MatrixCube } from './components/MatrixCube';
 import { Wand2 } from 'lucide-react';
 import { SceneSettingsPanel } from './components/SceneSettingsPanel';
 import { StandingPoseConfig, AnimationClip, PosePreset } from './types/animation';
@@ -61,6 +62,22 @@ export default function App() {
       window.removeEventListener('touchstart', handleTouchStart);
       clearTimeout(touchTimeout);
     };
+  }, []);
+
+  // Auto-Fullscreen on First Interaction
+  useEffect(() => {
+    const handleFirstClick = async () => {
+      if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
+        try {
+          await document.documentElement.requestFullscreen();
+        } catch (err) {
+          console.warn("Fullscreen request failed:", err);
+        }
+      }
+      window.removeEventListener('click', handleFirstClick);
+    };
+    window.addEventListener('click', handleFirstClick);
+    return () => window.removeEventListener('click', handleFirstClick);
   }, []);
 
   // Chat History State
@@ -249,21 +266,6 @@ export default function App() {
   const activeThinkingPose = allPoses.find(p => p.id === activeThinkingPoseId) || POSE_PRESETS.find(p => p.id === 'thinking_pose') || POSE_PRESETS[0];
 
   const finalStandingPose = isAiThinking ? activeThinkingPose.pose : standingPose;
-
-  // Auto-Fullscreen on first interaction
-  useEffect(() => {
-    const handleFirstClick = () => {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(err => {
-          console.log(`Error attempting to enable fullscreen: ${err.message}`);
-        });
-      }
-      document.removeEventListener('click', handleFirstClick);
-    };
-    
-    document.addEventListener('click', handleFirstClick);
-    return () => document.removeEventListener('click', handleFirstClick);
-  }, []);
 
   // Keyboard WASD Controls
   useEffect(() => {
@@ -687,14 +689,11 @@ export default function App() {
               />
 
               <RigidBody type="fixed">
-                <mesh position={[3, 0.5, 3]} castShadow={sceneConfig.castShadows} receiveShadow={sceneConfig.castShadows}>
-                  <boxGeometry args={[1, 1, 1]} />
-                  <meshStandardMaterial color="#1e293b" roughness={0.3} metalness={0.2} />
-                </mesh>
+                <MatrixCube position={[3, 0.5, 3]} />
               </RigidBody>
 
               {/* Laptop placed to fall dynamically onto the cube */}
-              <Laptop position={[3, 3.0, 3]} onOpenDesktop={() => setIsDesktopOpen(true)} />
+              <Laptop position={[3, 3.0, 3]} rotation={[0, -Math.PI / 2, 0]} onOpenDesktop={() => setIsDesktopOpen(true)} />
 
               <RigidBody type="fixed">
                 <mesh position={[-3, 0.5, -2]} castShadow={sceneConfig.castShadows} receiveShadow={sceneConfig.castShadows}>

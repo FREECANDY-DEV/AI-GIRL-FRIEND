@@ -118,14 +118,14 @@ export function StreetLightPole({ position = [0, 0, 0] }: { position?: [number, 
     <group position={position}>
       {/* Physical Pole Collider */}
       <RigidBody type="fixed" colliders={false} position={[0.8, 2.1, 0]}>
-        <CylinderCollider args={[2.1, 0.15]} />
+        <CylinderCollider args={[2.1, 0.04]} />
       </RigidBody>
 
       {/* Visual Metallic Pole Structure */}
       <group>
         {/* Base Foundation Flange Plate */}
         <mesh position={[0.8, 0.08, 0]} material={chromeMetalMat} castShadow receiveShadow>
-          <cylinderGeometry args={[0.3, 0.36, 0.16, 24]} />
+          <cylinderGeometry args={[0.12, 0.16, 0.16, 24]} />
         </mesh>
 
         {/* 4 Hex Mounting Bolts around base */}
@@ -133,60 +133,60 @@ export function StreetLightPole({ position = [0, 0, 0] }: { position?: [number, 
           <mesh
             key={idx}
             position={[
-              0.8 + Math.cos(angle) * 0.22,
+              0.8 + Math.cos(angle) * 0.10,
               0.18,
-              Math.sin(angle) * 0.22,
+              Math.sin(angle) * 0.10,
             ]}
             material={chromeMetalMat}
             castShadow
           >
-            <cylinderGeometry args={[0.025, 0.025, 0.08, 6]} />
+            <cylinderGeometry args={[0.012, 0.012, 0.08, 6]} />
           </mesh>
         ))}
 
         {/* Base Bevel Taper Collar */}
         <mesh position={[0.8, 0.28, 0]} material={darkMetalMat} castShadow receiveShadow>
-          <cylinderGeometry args={[0.16, 0.26, 0.24, 24]} />
+          <cylinderGeometry args={[0.06, 0.12, 0.24, 24]} />
         </mesh>
 
         {/* Main Tapered Metallic Shaft */}
         <mesh position={[0.8, 2.25, 0]} material={darkMetalMat} castShadow receiveShadow>
-          <cylinderGeometry args={[0.07, 0.15, 3.7, 24]} />
+          <cylinderGeometry args={[0.02, 0.06, 3.7, 24]} />
         </mesh>
 
         {/* Decorative Joint Ring Collar 1 */}
         <mesh position={[0.8, 1.8, 0]} material={chromeMetalMat} castShadow>
-          <torusGeometry args={[0.11, 0.02, 16, 32]} />
+          <torusGeometry args={[0.04, 0.01, 16, 32]} />
         </mesh>
 
         {/* Decorative Joint Ring Collar 2 */}
         <mesh position={[0.8, 3.8, 0]} material={chromeMetalMat} castShadow>
-          <torusGeometry args={[0.08, 0.02, 16, 32]} />
+          <torusGeometry args={[0.03, 0.01, 16, 32]} />
         </mesh>
 
         {/* Structural Arm Support Bracket */}
         <mesh position={[0.62, 4.05, 0]} rotation={[0, 0, Math.PI / 4]} material={bronzeAccentMat} castShadow>
-          <boxGeometry args={[0.35, 0.04, 0.06]} />
+          <boxGeometry args={[0.25, 0.02, 0.03]} />
         </mesh>
 
         {/* Curved Arm Extension */}
         <mesh position={[0.4, 4.25, 0]} rotation={[0, 0, Math.PI / 5]} material={darkMetalMat} castShadow>
-          <cylinderGeometry args={[0.045, 0.065, 0.95, 24]} />
+          <cylinderGeometry args={[0.015, 0.02, 0.95, 24]} />
         </mesh>
 
         {/* Luminaire Fixture Top Housing Cap */}
         <mesh position={[0, 4.42, 0]} material={darkMetalMat} castShadow>
-          <boxGeometry args={[0.48, 0.14, 0.34]} />
+          <boxGeometry args={[0.28, 0.10, 0.20]} />
         </mesh>
 
         {/* Chrome Luminaire Trim Bezel */}
         <mesh position={[0, 4.34, 0]} material={chromeMetalMat} castShadow>
-          <boxGeometry args={[0.5, 0.03, 0.36]} />
+          <boxGeometry args={[0.30, 0.03, 0.22]} />
         </mesh>
 
         {/* Glowing Emissive Bulb Lens */}
         <mesh position={[0, 4.31, 0]}>
-          <boxGeometry args={[0.36, 0.02, 0.25]} />
+          <boxGeometry args={[0.24, 0.02, 0.18]} />
           <meshStandardMaterial color="#fef08a" emissive="#fbbf24" emissiveIntensity={6} toneMapped={false} />
         </mesh>
 
