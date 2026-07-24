@@ -1,131 +1,95 @@
-# 🌌 GridMap Studio — 3D Cyberpunk AI Companion & Studio
-
 <div align="center">
-  <img src="screenshots/hero_view.png" alt="GridMap Studio Main View" width="100%"/>
-  <br/>
-  <em>GridMap Studio features Ava, an AI-powered 3D companion living in an interactive cyberpunk WebGL environment.</em>
+  <img src="docs/screenshots/hero.jpg" alt="GridMap Studio Hero" width="100%" style="border-radius: 15px;" />
+  <br />
+  <br />
+
+  <h1>✨ AI-GIRL-FRIEND: 3D Studio & WebGL Companion ✨</h1>
+  <p><strong>A futuristic, immersive 3D AI companion running directly in your browser. Powered by React, Three.js, and Vite.</strong></p>
+
+  <p>
+    <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" />
+    <img src="https://img.shields.io/badge/ThreeJs-black?style=for-the-badge&logo=three.js&logoColor=white" alt="Three.js" />
+    <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
+    <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS" />
+    <img src="https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E" alt="Vite" />
+  </p>
 </div>
 
-<p align="center">
-  <b>Live Demo:</b> <a href="https://freecandy-dev.github.io/AI-GIRL-FRIEND/">Play Now on GitHub Pages</a>
-</p>
+<hr />
 
-An interactive 3D WebGL web application featuring **Ava**, an AI-powered 3D companion driven by **Z.AI GLM-4.5-Flash** and multilingual female Text-to-Speech (TTS). Built with **React 18**, **Three.js / React Three Fiber**, **Tailwind CSS**, and **Rapier Physics**.
+## 🌟 Features Showcase
 
----
+### 💬 1. Intelligent AI Chat & Commands
+> Engage in immersive conversations with a highly capable AI companion directly within the 3D world.
+<div align="center">
+  <img src="docs/screenshots/chat.jpg" alt="AI Chat Interface" width="80%" style="border-radius: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.5);" />
+</div>
 
-## 📸 Feature Showcase
-
-### 🤖 The Companion & UI
-<table align="center">
-  <tr>
-    <td align="center">
-      <img src="screenshots/hero_view.png" alt="GridMap Studio Main View" width="400"/>
-      <br/>
-      <em>Main 3D Viewport</em>
-    </td>
-    <td align="center">
-      <img src="screenshots/chat_history.png" alt="Chat History" width="400"/>
-      <br/>
-      <em>Chat History Logs</em>
-    </td>
-  </tr>
-  <tr>
-    <td align="center">
-      <img src="screenshots/profile_database.png" alt="Profile View" width="400"/>
-      <br/>
-      <em>Expandable Character Profile</em>
-    </td>
-    <td align="center">
-      <img src="screenshots/tools_menu.png" alt="Toolbar Expanded" width="400"/>
-      <br/>
-      <em>Floating Toolbars & Media</em>
-    </td>
-  </tr>
-</table>
-
-### 💻 Interactive Ubuntu OS
-<table align="center">
-  <tr>
-    <td align="center">
-      <img src="screenshots/ubuntu_desktop.png" alt="Ubuntu Desktop Login" width="400"/>
-      <br/>
-      <em>Full-Screen Simulated Ubuntu OS</em>
-    </td>
-    <td align="center">
-      <img src="screenshots/ubuntu_files.png" alt="Ubuntu File Explorer" width="400"/>
-      <br/>
-      <em>File Explorer & Image Viewer</em>
-    </td>
-  </tr>
-  <tr>
-    <td align="center" colspan="2">
-      <img src="screenshots/ubuntu_terminal.png" alt="Ubuntu Terminal" width="500"/>
-      <br/>
-      <em>Working 3D Terminal Simulator</em>
-    </td>
-  </tr>
-</table>
+- **Smart Context**: The AI remembers conversation history in the elegant Chat History Sidebar.
+- **Slash Commands**: Type `/help` to see a magical command autocomplete menu hover above the chat input.
+- **Animated Tutorials**: Trigger embedded tutorials (like the simulated terminal view) that play directly inside the chat UI!
 
 ---
 
-## ✨ Features
+### 💃 2. Advanced Animation & Pose Library
+> Take full control of the 3D character model using a sleek, glassmorphic UI drawer.
+<div align="center">
+  <img src="docs/screenshots/library.jpg" alt="Animation Library" width="80%" style="border-radius: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.5);" />
+</div>
 
-- 🤖 **Z.AI GLM-4.5-Flash AI Companion**: Real-time AI companion powered by Z.AI's GLM-4.5-Flash model with multilingual support (English, Hebrew, Spanish, French, German, Russian, Arabic, Japanese, Chinese) and spoken female voice output.
-- 📊 **Dynamic Character Profile**: Expandable profile widget featuring a live Picture-in-Picture (PiP) 3D camera feed of Ava's face with CRT noise/glitch effects, and a highly detailed RPG-style database layout showing live character stats.
-- 💻 **Simulated Ubuntu OS**: Clickable 3D laptop that triggers a full-screen interactive Ubuntu desktop interface. Includes a draggable Terminal, File Explorer with vacation pictures, and an Image Viewer app!
-- 🎵 **Chill Lo-Fi Audio**: Floating background music player with interactive visualizer bars, play/pause controls, and volume adjustments.
-- 💰 **Crypto Donations**: Minimalistic floating ₮ (USDT) button with a quick TRC20 address copy-to-clipboard functionality to support development.
-- 💬 **Interactive Speech Bubble**: Responses float cleanly directly on top of the prompt input bar with line wrapping and TTS audio playback.
-- 💡 **Advanced Lighting & Environment**: Realistic directional lighting, soft ground light pools, ambient floating particles, and dynamic shadow casting across all 3D meshes.
-- 🎥 **Cinematic Effects**: 5-Octave animated film grain filter and radial vignetting for a retro cinematic film aesthetic.
-- 🕹️ **Dynamic Controls**:
-  - WASD / Arrow Keys for character movement.
-  - Dynamic Touch Joystick that appears seamlessly on touch screen devices.
-  - OrbitControls free camera view and over-the-shoulder perspective.
-  - Camera height scrollbar & permanent view saving.
-- 🦴 **Single-Limb 3D Bone Dragging**: Drag individual limbs (arms, hands, legs) independently in 3D space with self-collision solvers.
-- 🌌 **Starry Sky & Solid Floor Physics**: 6,000 glittering stars in the night sky backdrop and bulletproof 4-meter thick floor physics colliders.
+- **Seamless Transitions**: Smooth interpolation between hundreds of animations and idle states.
+- **Real-time Previews**: Select animations from the grid to preview them instantly in the 3D world.
+- **Bone Control**: Granular IK controls for custom poses.
 
 ---
 
-## 🚀 Quick Start
+### 🎛️ 3. Cinematic Scene Settings
+> Craft the perfect aesthetic with comprehensive WebGL scene and lighting controls.
+<div align="center">
+  <img src="docs/screenshots/settings.jpg" alt="Scene Settings" width="80%" style="border-radius: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.5);" />
+</div>
 
-### 1. Installation
+- **Volumetric Lighting**: Toggle moonlight, streetlamps, and ambient occlusion settings.
+- **Post-Processing**: Add intense cinematic film grain, bloom, and dynamic vignettes on the fly.
+- **Environmental Controls**: Adjust starry sky density and procedural butterfly particle speeds.
+
+<hr />
+
+## 🚀 Installation & Getting Started
+
+Follow these steps to launch the experience locally on your machine.
+
+### Prerequisites
+Make sure you have [Node.js](https://nodejs.org/) installed on your machine.
+
+### Setup
+
 ```bash
+# 1. Clone the repository
+git clone https://github.com/freecandy-dev/AI-GIRL-FRIEND.git
+
+# 2. Enter the project directory
+cd AI-GIRL-FRIEND
+
+# 3. Install dependencies
 npm install
-```
 
-### 2. Run Locally
-```bash
+# 4. Start the Vite development server
 npm run dev
 ```
-Open [http://localhost:5173](http://localhost:5173) in your browser.
 
-### 3. Build for Production / GitHub Pages
-```bash
-npm run build
-```
-The output will be in the `dist` directory, ready to be hosted on GitHub Pages or any static Web hosting provider.
+Visit `http://localhost:5173` (or the port shown in your terminal) to experience the app!
 
----
+## 🛠️ Architecture & Technologies
 
-## 🔑 Z.AI API Key Integration
-
-The app comes pre-configured with Z.AI GLM-4.5-Flash API integration out-of-the-box. When hosted on GitHub Pages, client requests connect directly to Z.AI endpoints using model `glm-4.5-flash`.
+- **Core Framework**: React 18
+- **3D Rendering**: `@react-three/fiber` & `@react-three/drei`
+- **Physics**: `@react-three/rapier` for rigid bodies and colliders
+- **Styling**: TailwindCSS (v3) + PostCSS
+- **Build Tool**: Vite (Lightning fast HMR)
 
 ---
 
-## 🛠️ Tech Stack
-
-- **Framework**: React 18 + Vite
-- **3D Graphics**: Three.js, React Three Fiber (`@react-three/fiber`), Drei (`@react-three/drei`)
-- **Physics**: Rapier 3D (`@react-three/rapier`)
-- **Styling**: Tailwind CSS
-- **Icons**: Lucide React
-- **AI Model**: Z.AI GLM-4.5-Flash API
-
----
 <div align="center">
-  <i>Developed with precision and passion for immersive web experiences.</i>
+  <p>Built with ❤️ by the freecandy-dev team.</p>
 </div>

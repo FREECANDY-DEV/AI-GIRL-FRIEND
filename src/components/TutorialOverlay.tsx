@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { X, Terminal, Chrome, Folder, LayoutGrid, Minus, Square } from 'lucide-react';
 
 interface TutorialOverlayProps {
-  onClose: () => void;
+  onClose?: () => void;
   command?: string;
+  inline?: boolean;
 }
 
-export function TutorialOverlay({ onClose, command = 'ls -la' }: TutorialOverlayProps) {
+export function TutorialOverlay({ onClose, command = 'ls -la', inline = false }: TutorialOverlayProps) {
   const [step, setStep] = useState(0);
   const [typedText, setTypedText] = useState('');
   const [showOutput, setShowOutput] = useState(false);
@@ -67,8 +68,13 @@ export function TutorialOverlay({ onClose, command = 'ls -la' }: TutorialOverlay
     };
   }, [command]);
 
+  const baseClasses = "bg-slate-900 rounded-xl shadow-2xl border border-slate-700/50 overflow-hidden z-[200] font-ubuntu flex flex-col pointer-events-auto animate-in fade-in";
+  const layoutClasses = inline
+    ? "relative w-full h-48 mt-2" // Inline styles for chat bubble
+    : "fixed bottom-6 right-6 w-96 h-64 slide-in-from-bottom-4 duration-300"; // PiP styles
+
   return (
-    <div className="fixed bottom-6 right-6 w-96 h-64 bg-slate-900 rounded-xl shadow-2xl border border-slate-700/50 overflow-hidden z-[200] font-ubuntu flex flex-col pointer-events-auto animate-in fade-in slide-in-from-bottom-4 duration-300">
+    <div className={`${baseClasses} ${layoutClasses}`}>
       
       {/* Mini Titlebar */}
       <div className="h-8 bg-slate-800 flex items-center justify-between px-3 border-b border-slate-700 select-none">
@@ -76,9 +82,11 @@ export function TutorialOverlay({ onClose, command = 'ls -la' }: TutorialOverlay
           <div className="w-2.5 h-2.5 rounded-full bg-slate-600 animate-pulse" />
           <span className="text-xs font-bold text-slate-300">AI Simulation</span>
         </div>
-        <button onClick={onClose} className="p-1 hover:bg-slate-700 rounded text-slate-400 hover:text-white transition">
-          <X size={14} />
-        </button>
+        {!inline && onClose && (
+          <button onClick={onClose} className="p-1 hover:bg-slate-700 rounded text-slate-400 hover:text-white transition">
+            <X size={14} />
+          </button>
+        )}
       </div>
 
       {/* Mini Desktop Area */}

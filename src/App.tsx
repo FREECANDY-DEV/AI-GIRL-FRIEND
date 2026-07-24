@@ -46,13 +46,10 @@ export default function App() {
 
   // Player Camera state, initialized from sceneConfig
   const [camHeight, setCamHeight] = useState<number>(DEFAULT_SCENE_CONFIG.cameraPositionY || 1.45);
-  const [activeTutorial, setActiveTutorial] = useState<string | null>(null);
-  
-  // Slash Commands State
-  const [showCommandMenu, setShowCommandMenu] = useState(false);
-
   const [saveToast, setSaveToast] = useState<string | null>(null);
 
+  // Tutorial State
+  const [activeTutorial, setActiveTutorial] = useState<string | null>(null);
   // Dynamic Touch Screen Detection (Joystick appears only when touching screen)
   const [isTouchActive, setIsTouchActive] = useState(false);
 
@@ -88,10 +85,12 @@ export default function App() {
   }, []);
 
   // Chat History State
-  const [chatHistory, setChatHistory] = useState<Array<{ id: string; sender: 'user' | 'ava'; text: string; time: string }>>([]);
+  const [chatHistory, setChatHistory] = useState<Array<{ id: string; sender: 'user' | 'ava'; text: string; time: string; tutorialCommand?: string }>>([]);
 
   // AI Companion Chat State (Z.AI GLM-4-Flash + Female TTS)
   const [aiChatInput, setAiChatInput] = useState('');
+  const [showCommandMenu, setShowCommandMenu] = useState(false);
+  const availableCommands = ['/help'];
   const [speechMessage, setSpeechMessage] = useState<string | null>(null);
   const [isAiThinking, setIsAiThinking] = useState(false);
   const [isTtsEnabled, setIsTtsEnabled] = useState(true);
@@ -126,79 +125,23 @@ export default function App() {
 
   const [isSceneSettingsOpen, setIsSceneSettingsOpen] = useState(false);
 
-  // Standing Pose state (Persisted in LocalStorage)
-  const [standingPose, setStandingPose] = useState<StandingPoseConfig>(() => {
-    try {
-      const saved = localStorage.getItem('lab_standing_pose_v2');
-      return saved ? JSON.parse(saved) : DEFAULT_STANDING_POSE;
-    } catch {
-      return DEFAULT_STANDING_POSE;
-    }
-  });
+  // Standing Pose state (Globally synchronized)
+  const [standingPose, setStandingPose] = useState<StandingPoseConfig>(DEFAULT_STANDING_POSE);
 
-  // User Custom Default Base Pose state (Persisted in LocalStorage)
-  const [defaultBasePose, setDefaultBasePose] = useState<StandingPoseConfig>(() => {
-    try {
-      const saved = localStorage.getItem('lab_default_base_pose_v1');
-      return saved ? JSON.parse(saved) : DEFAULT_STANDING_POSE;
-    } catch {
-      return DEFAULT_STANDING_POSE;
-    }
-  });
+  // User Custom Default Base Pose state (Globally synchronized)
+  const [defaultBasePose, setDefaultBasePose] = useState<StandingPoseConfig>(DEFAULT_STANDING_POSE);
 
-  // Custom Animation Clips state (Persisted in LocalStorage)
-  const [customClips, setCustomClips] = useState<AnimationClip[]>(() => {
-    try {
-      const saved = localStorage.getItem('lab_custom_clips_v2');
-      if (saved) {
-        const parsed: AnimationClip[] = JSON.parse(saved);
-        
-        // Ensure any new default clips are appended if they are missing from localStorage
-        const missingDefaults = DEFAULT_CLIPS.filter(d => !parsed.some(p => p.id === d.id));
-        const mergedClips = [...parsed, ...missingDefaults];
+  // Custom Animation Clips state (Globally synchronized)
+  const [customClips, setCustomClips] = useState<AnimationClip[]>(DEFAULT_CLIPS);
 
-        // Ensure default clips like walk_cycle carry the latest keyframe structure if missing
-        return mergedClips.map((clip) => {
-          const defaultMatch = DEFAULT_CLIPS.find((d) => d.id === clip.id);
-          if (defaultMatch && clip.id === 'walk_cycle' && !clip.keyframes[0]?.positions) {
-            return defaultMatch;
-          }
-          return clip;
-        });
-      }
-      return DEFAULT_CLIPS;
-    } catch {
-      return DEFAULT_CLIPS;
-    }
-  });
+  // Custom Pose Presets state (Globally synchronized)
+  const [customPoses, setCustomPoses] = useState<PosePreset[]>(POSE_PRESETS);
 
-  // Custom Pose Presets state (Persisted in LocalStorage)
-  const [customPoses, setCustomPoses] = useState<PosePreset[]>(() => {
-    try {
-      const saved = localStorage.getItem('lab_custom_poses_v2');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  // Active Walk Cycle Clip ID for the game character (Globally synchronized)
+  const [activeWalkClipId, setActiveWalkClipId] = useState<string>('walk_cycle');
 
-  // Active Walk Cycle Clip ID for the game character (Persisted in LocalStorage)
-  const [activeWalkClipId, setActiveWalkClipId] = useState<string>(() => {
-    try {
-      return localStorage.getItem('lab_active_walk_clip_v2') || 'walk_cycle';
-    } catch {
-      return 'walk_cycle';
-    }
-  });
-
-  // Active Thinking Pose ID (Persisted in LocalStorage)
-  const [activeThinkingPoseId, setActiveThinkingPoseId] = useState<string>(() => {
-    try {
-      return localStorage.getItem('lab_active_thinking_pose_v2') || 'thinking_pose';
-    } catch {
-      return 'thinking_pose';
-    }
-  });
+  // Active Thinking Pose ID (Globally synchronized)
+  const [activeThinkingPoseId, setActiveThinkingPoseId] = useState<string>('thinking_pose');
 
   useEffect(() => {
     try {
@@ -465,6 +408,21 @@ export default function App() {
 
     setChatHistory((prev) => [...prev, { id: userMsgId, sender: 'user', text: userText, time: nowTime }]);
 
+    setShowCommandMenu(false); // Hide menu upon send
+
+    // Local Command Interception
+    if (userText.toLowerCase() === '/help') {
+      const helpReply = "Here is what I can do!\n- I can perform physical actions! (Try: 'do a chicken dance')\n- I can open a simulated terminal tutorial for you! (Try: 'how to check directories in the terminal')\n- I can chat with you in multiple languages based on your input!\n\nJust ask me anything!";
+      setSpeechMessage(helpReply);
+      setChatHistory((prev) => [
+        ...prev,
+        { id: (Date.now() + 1).toString(), sender: 'ava', text: helpReply, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) },
+      ]);
+      if (isTtsEnabled) speakFemaleTTS(helpReply);
+      setIsAiThinking(false);
+      return;
+    }
+
     let reply = await generateGLMResponse(userText);
     setIsAiThinking(false);
     
@@ -478,10 +436,11 @@ export default function App() {
     }
     
     // Check for [TUTORIAL: ...] tag
+    let tutorialCmd: string | undefined;
     const tutorialMatch = reply.match(/\[TUTORIAL:\s*(.*?)\]/i);
     if (tutorialMatch) {
-      const commandName = tutorialMatch[1];
-      setActiveTutorial(commandName);
+      tutorialCmd = tutorialMatch[1];
+      setActiveTutorial(tutorialCmd);
       // Remove tag from reply so user doesn't see it
       reply = reply.replace(tutorialMatch[0], '').trim();
     }
@@ -489,7 +448,13 @@ export default function App() {
     setSpeechMessage(reply);
     setChatHistory((prev) => [
       ...prev,
-      { id: (Date.now() + 1).toString(), sender: 'ava', text: reply, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) },
+      { 
+        id: (Date.now() + 1).toString(), 
+        sender: 'ava', 
+        text: reply, 
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        tutorialCommand: tutorialCmd
+      },
     ]);
 
     if (isTtsEnabled) {
@@ -605,6 +570,9 @@ export default function App() {
                     <span>{item.time}</span>
                   </div>
                   <p dir="auto" className="leading-snug">{item.text}</p>
+                  {item.tutorialCommand && (
+                    <TutorialOverlay command={item.tutorialCommand} inline={true} />
+                  )}
                 </div>
               ))
             )}
@@ -982,6 +950,36 @@ export default function App() {
           </div>
         )}
 
+        {/* Slash Command Autocomplete Menu */}
+        {showCommandMenu && (
+          <div className="absolute bottom-[115%] left-0 w-48 bg-slate-800 rounded-lg shadow-2xl border border-slate-700/80 overflow-hidden z-[30] animate-in slide-in-from-bottom-2 fade-in">
+            <div className="px-2 py-1.5 bg-slate-900 border-b border-slate-700">
+              <span className="text-[10px] font-bold text-slate-400">COMMANDS</span>
+            </div>
+            <div className="flex flex-col max-h-40 overflow-y-auto">
+              {availableCommands
+                .filter(cmd => cmd.startsWith(aiChatInput.toLowerCase()))
+                .map((cmd) => (
+                  <button
+                    key={cmd}
+                    type="button"
+                    onClick={() => {
+                      setAiChatInput(cmd);
+                      setShowCommandMenu(false);
+                    }}
+                    className="flex items-center px-3 py-2 text-xs text-slate-300 hover:bg-blue-600/20 hover:text-blue-400 transition text-left font-mono"
+                  >
+                    <span className="font-bold">{cmd}</span>
+                  </button>
+              ))}
+              {availableCommands.filter(cmd => cmd.startsWith(aiChatInput.toLowerCase())).length === 0 && (
+                <div className="px-3 py-2 text-xs text-slate-500 italic">No commands found</div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* AI Companion Floating Chat Input Bar (Z.AI GLM-4-Flash + Female Voice) */}
         <form
           onSubmit={handleSendAiMessage}
           className="absolute bottom-4 sm:bottom-6 right-4 sm:right-6 md:right-1/2 md:translate-x-1/2 z-20 pointer-events-auto flex items-center gap-1.5 bg-slate-900/95 border border-slate-800 p-1.5 rounded-2xl shadow-2xl backdrop-blur-xl w-[calc(100vw-7rem)] max-w-md sm:max-w-lg"
@@ -1007,7 +1005,7 @@ export default function App() {
               setAiChatInput(val);
               setShowCommandMenu(val.startsWith('/'));
             }}
-            placeholder="Talk to Ava (AI Companion)... type '/' for commands"
+            placeholder="Talk to Ava (AI Companion)..."
             className="flex-1 bg-transparent text-slate-100 placeholder-slate-400 text-xs sm:text-sm px-2 focus:outline-none font-medium"
           />
 
