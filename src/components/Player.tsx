@@ -725,11 +725,20 @@ export function Player({
       8 * delta
     );
 
-    // Compute relative face & shoulder yaw based on camera perspective
+    // Compute relative face & shoulder yaw based on camera perspective and mouse pointer
     const clampedCamDiff = THREE.MathUtils.clamp(camDiff, -Math.PI * 0.94, Math.PI * 0.94);
-    const headYaw = clampedCamDiff * 0.55;       // Face / Head (55%)
-    const shoulderYaw = clampedCamDiff * 0.35;   // Upper Chest & Shoulders Spine2 (35%)
-    const spine1Yaw = clampedCamDiff * 0.15;     // Mid Spine1 (15%)
+    
+    // Add pointer tracking so she looks at the mouse
+    const pointerX = state.pointer.x; // -1 to 1 (left to right)
+    const pointerY = state.pointer.y; // -1 to 1 (bottom to top)
+    
+    const pointerYawOffset = -pointerX * 0.8; // Look left/right based on pointer
+    const pointerPitchOffset = Math.max(-0.5, Math.min(0.5, pointerY * 0.5)); // Look up/down based on pointer
+
+    const headYaw = (clampedCamDiff * 0.55) + pointerYawOffset;       // Face / Head
+    const shoulderYaw = (clampedCamDiff * 0.35) + (pointerYawOffset * 0.3);   // Upper Chest & Shoulders
+    const spine1Yaw = (clampedCamDiff * 0.15) + (pointerYawOffset * 0.1);     // Mid Spine1
+    const headPitch = pointerPitchOffset;
 
     // Natural Upright Standing Pose + Gentle Breathing
     idleTimeRef.current += delta * 2.2;

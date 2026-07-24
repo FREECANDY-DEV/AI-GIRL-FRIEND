@@ -250,6 +250,21 @@ export default function App() {
 
   const finalStandingPose = isAiThinking ? activeThinkingPose.pose : standingPose;
 
+  // Auto-Fullscreen on first interaction
+  useEffect(() => {
+    const handleFirstClick = () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          console.log(`Error attempting to enable fullscreen: ${err.message}`);
+        });
+      }
+      document.removeEventListener('click', handleFirstClick);
+    };
+    
+    document.addEventListener('click', handleFirstClick);
+    return () => document.removeEventListener('click', handleFirstClick);
+  }, []);
+
   // Keyboard WASD Controls
   useEffect(() => {
     const keys = new Set<string>();
