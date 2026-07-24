@@ -84,6 +84,42 @@ export function SceneSettingsPanel({ config, onChange, onClose }: SceneSettingsP
             Enable Auto-Rotate
           </label>
 
+          <div className="space-y-3 mt-4 pt-4 border-t border-slate-800">
+            <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Starting Position</h4>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="space-y-1">
+                <span className="text-[10px] text-slate-500">X (Side)</span>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={config.cameraPositionX}
+                  onChange={(e) => updateField('cameraPositionX', parseFloat(e.target.value))}
+                  className="w-full bg-slate-950 border border-slate-800 rounded px-1 py-1 text-xs text-slate-300 font-mono"
+                />
+              </div>
+              <div className="space-y-1">
+                <span className="text-[10px] text-slate-500">Y (Height)</span>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={config.cameraPositionY}
+                  onChange={(e) => updateField('cameraPositionY', parseFloat(e.target.value))}
+                  className="w-full bg-slate-950 border border-slate-800 rounded px-1 py-1 text-xs text-slate-300 font-mono"
+                />
+              </div>
+              <div className="space-y-1">
+                <span className="text-[10px] text-slate-500">Z (Zoom)</span>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={config.cameraPositionZ}
+                  onChange={(e) => updateField('cameraPositionZ', parseFloat(e.target.value))}
+                  className="w-full bg-slate-950 border border-slate-800 rounded px-1 py-1 text-xs text-slate-300 font-mono"
+                />
+              </div>
+            </div>
+          </div>
+
           {config.enableAutoRotate && (
             <div className="space-y-1 pl-4 border-l border-slate-800">
               <div className="flex justify-between text-[11px]">

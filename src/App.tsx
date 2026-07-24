@@ -43,8 +43,8 @@ export default function App() {
   const [isToolbarExpanded, setIsToolbarExpanded] = useState(false);
   const [isCamControlsOpen, setIsCamControlsOpen] = useState(false);
 
-  // Camera Height & Permanent Save State
-  const [camHeight, setCamHeight] = useState<number>(1.65);
+  // Player Camera state, initialized from sceneConfig
+  const [camHeight, setCamHeight] = useState<number>(DEFAULT_SCENE_CONFIG.cameraPositionY || 1.45);
   const [saveToast, setSaveToast] = useState<string | null>(null);
 
   // Dynamic Touch Screen Detection (Joystick appears only when touching screen)
@@ -95,18 +95,28 @@ export default function App() {
     mode: 'pose',
   });
 
-  const [sceneConfig, setSceneConfig] = useState<SceneConfig>(() => {
-    try {
-      const saved = localStorage.getItem('lab_scene_config_v3');
-      return saved ? { ...DEFAULT_SCENE_CONFIG, ...JSON.parse(saved) } : DEFAULT_SCENE_CONFIG;
-    } catch {
-      return DEFAULT_SCENE_CONFIG;
-    }
-  });
+  const [sceneConfig, setSceneConfig] = useState<SceneConfig>(DEFAULT_SCENE_CONFIG);
 
+  // Automatically sync scene settings to project files
   useEffect(() => {
-    localStorage.setItem('lab_scene_config_v3', JSON.stringify(sceneConfig));
+    const handler = setTimeout(async () => {
+      try {
+        const res = await fetch('/api/save-scene', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sceneConfig }),
+        });
+        if (res.ok) {
+           localStorage.removeItem('lab_scene_config_v3');
+        }
+      } catch (err) {
+        console.warn('Auto-save scene config failed:', err);
+      }
+    }, 2000); // 2 second debounce
+
+    return () => clearTimeout(handler);
   }, [sceneConfig]);
+
 
   const [isSceneSettingsOpen, setIsSceneSettingsOpen] = useState(false);
 
@@ -136,8 +146,13 @@ export default function App() {
       const saved = localStorage.getItem('lab_custom_clips_v2');
       if (saved) {
         const parsed: AnimationClip[] = JSON.parse(saved);
+        
+        // Ensure any new default clips are appended if they are missing from localStorage
+        const missingDefaults = DEFAULT_CLIPS.filter(d => !parsed.some(p => p.id === d.id));
+        const mergedClips = [...parsed, ...missingDefaults];
+
         // Ensure default clips like walk_cycle carry the latest keyframe structure if missing
-        return parsed.map((clip) => {
+        return mergedClips.map((clip) => {
           const defaultMatch = DEFAULT_CLIPS.find((d) => d.id === clip.id);
           if (defaultMatch && clip.id === 'walk_cycle' && !clip.keyframes[0]?.positions) {
             return defaultMatch;
@@ -227,6 +242,40 @@ export default function App() {
     }
   }, [activeWalkClipId]);
 
+  // Automatically sync to project files (so data is shared across browsers)
+  useEffect(() => {
+    const handler = setTimeout(async () => {
+      try {
+        const allPoses = [...POSE_PRESETS, ...customPoses];
+        // Deduplicate poses by ID in case they were already merged
+        const uniquePoses = allPoses.filter((p, i, a) => a.findIndex(t => t.id === p.id) === i);
+
+        const res = await fetch('/api/save-animations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            clips: customClips,
+            poses: uniquePoses,
+            standingPose: standingPose,
+          }),
+        });
+        
+        if (res.ok) {
+           // Clear local storage so we don't duplicate data on next reload, 
+           // and instead rely entirely on the project files as the source of truth
+           localStorage.removeItem('lab_custom_clips_v2');
+           localStorage.removeItem('lab_custom_poses_v2');
+           localStorage.removeItem('lab_standing_pose_v2');
+           localStorage.removeItem('lab_default_base_pose_v1');
+        }
+      } catch (err) {
+        console.warn('Auto-save to configuration failed:', err);
+      }
+    }, 2000); // 2 second debounce
+
+    return () => clearTimeout(handler);
+  }, [customClips, customPoses, standingPose]);
+
   const orbitControlsRef = useRef<OrbitControlsImpl>(null);
 
   // Active walk & idle clip objects used by Player in the game map
@@ -291,6 +340,16 @@ export default function App() {
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.target as HTMLElement)?.tagName === 'INPUT') return;
+      
+      const moveKeys = ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+      
+      // If in Free Camera mode, the first movement key press ONLY triggers the camera transition.
+      // We consume the keypress so the character won't move until they press it again.
+      if (isFreeCamera && moveKeys.includes(e.code)) {
+        setIsFreeCamera(false);
+        return;
+      }
+      
       keys.add(e.code);
       updateMovement();
     };
@@ -308,7 +367,7 @@ export default function App() {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, []);
+  }, [isFreeCamera]);
 
   const handleResetModelAndCamera = () => {
     // 1. Reset camera mode to default Free View
@@ -329,14 +388,18 @@ export default function App() {
     if (orbitControlsRef.current) {
       const pos = orbitControlsRef.current.object.position;
       const target = orbitControlsRef.current.target;
-      const data = {
-        camPos: [pos.x, pos.y, pos.z],
-        targetPos: [target.x, target.y, target.z],
-        isFree: isFreeCamera,
-      };
-      localStorage.setItem('gridmap_custom_cam_position', JSON.stringify(data));
-      localStorage.setItem('gridmap_default_cam_preset', 'custom');
-      setSaveToast('Camera view saved permanently!');
+      
+      // The distance between the camera and its target is the radius (zoom)
+      const distance = pos.distanceTo(target);
+      
+      setSceneConfig((prev) => ({
+        ...prev,
+        cameraPositionZ: distance,
+        cameraPositionY: camHeight,
+        // Optional: you could calculate X offset here, but we leave it as is or use current X
+      }));
+      
+      setSaveToast('Camera view saved to Project Files permanently!');
       setTimeout(() => setSaveToast(null), 3000);
     }
   };
@@ -373,10 +436,19 @@ export default function App() {
 
     setChatHistory((prev) => [...prev, { id: userMsgId, sender: 'user', text: userText, time: nowTime }]);
 
-    const reply = await generateGLMResponse(userText);
+    let reply = await generateGLMResponse(userText);
     setIsAiThinking(false);
-    setSpeechMessage(reply);
+    
+    // Check for [ACTION: ...] tag
+    const actionMatch = reply.match(/\[ACTION:\s*(.*?)\]/i);
+    if (actionMatch) {
+      const actionName = actionMatch[1].toLowerCase();
+      window.dispatchEvent(new CustomEvent('avaAction', { detail: actionName }));
+      // Remove tag from reply so user doesn't see it
+      reply = reply.replace(actionMatch[0], '').trim();
+    }
 
+    setSpeechMessage(reply);
     setChatHistory((prev) => [
       ...prev,
       { id: (Date.now() + 1).toString(), sender: 'ava', text: reply, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) },
@@ -618,7 +690,8 @@ export default function App() {
             filter: `brightness(${sceneConfig.brightness}) contrast(${sceneConfig.contrast}) saturate(${sceneConfig.saturation})`
           }}
         >
-          <Canvas camera={{ position: [0, 1.45, 1.6], fov: sceneConfig.cameraFov }} shadows>
+          <Canvas camera={{ position: [sceneConfig.cameraPositionX, sceneConfig.cameraPositionY, sceneConfig.cameraPositionZ], fov: sceneConfig.cameraFov }} shadows>
+            {/* The rest remains the same */}
             
             {/* Environment & Background */}
             <color attach="background" args={[sceneConfig.backgroundColor]} />
@@ -677,6 +750,8 @@ export default function App() {
                 hideHeadSpeech={true}
                 resetTrigger={resetTrigger}
                 camHeight={camHeight}
+                camRadius={sceneConfig.cameraPositionZ}
+                camOffsetX={sceneConfig.cameraPositionX}
               />
 
               {/* Soft Dynamic Contact Shadow under character feet */}

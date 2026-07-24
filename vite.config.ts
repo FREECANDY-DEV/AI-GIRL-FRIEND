@@ -12,8 +12,8 @@ function saveProjectFilesPlugin(): Plugin {
   return {
     name: 'save-project-files',
     configureServer(server) {
-      server.middlewares.use('/api/save-animations', (req, res) => {
-        if (req.method === 'POST') {
+      server.middlewares.use('/api/save-animations', (req, res, next) => {
+        if (req.url === '/' && req.method === 'POST') {
           let body = '';
           req.on('data', (chunk) => (body += chunk));
           req.on('end', () => {
@@ -37,8 +37,57 @@ function saveProjectFilesPlugin(): Plugin {
             }
           });
         } else {
-          res.statusCode = 405;
-          res.end();
+          next();
+        }
+      });
+
+      server.middlewares.use('/api/save-scene', (req, res, next) => {
+        if (req.url === '/' && req.method === 'POST') {
+          let body = '';
+          req.on('data', (chunk) => (body += chunk));
+          req.on('end', () => {
+            try {
+              const { sceneConfig } = JSON.parse(body);
+              const targetPath = path.resolve(__dirname, 'src/types/scene.ts');
+
+              const fileContent = `export interface SceneConfig {
+  showSkeleton: boolean;
+  ambientLightIntensity: number;
+  ambientLightColor: string;
+  directionalLightIntensity: number;
+  directionalLightColor: string;
+  directionalLightPositionX: number;
+  directionalLightPositionY: number;
+  directionalLightPositionZ: number;
+  backgroundColor: string;
+  cameraFov: number;
+  enableAutoRotate: boolean;
+  autoRotateSpeed: number;
+  starCount: number;
+  starSpeed: number;
+  saturation: number;
+  brightness: number;
+  contrast: number;
+  filmGrain: number;
+  castShadows: boolean;
+  contactShadowOpacity: number;
+  contactShadowBlur: number;
+}
+
+export const DEFAULT_SCENE_CONFIG: SceneConfig = ${JSON.stringify(sceneConfig, null, 2)};\n`;
+
+              fs.writeFileSync(targetPath, fileContent, 'utf8');
+              res.statusCode = 200;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ success: true, message: 'Saved to src/types/scene.ts' }));
+            } catch (err: any) {
+              res.statusCode = 500;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ error: err?.message || 'Failed to save' }));
+            }
+          });
+        } else {
+          next();
         }
       });
     },

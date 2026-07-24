@@ -320,6 +320,9 @@ export function UbuntuDesktop({ onClose }: UbuntuDesktopProps) {
                           if (childNode.type === 'dir') {
                             setFilesDir(`${filesDir}/${childName}`);
                           } else if (childNode.type === 'file' && childNode.isImage) {
+                            if (childName.includes('vacation4_feets')) {
+                              window.dispatchEvent(new CustomEvent('avaFeetPicFound'));
+                            }
                             openApp('image', childNode.content);
                           }
                         }}
@@ -345,8 +348,8 @@ export function UbuntuDesktop({ onClose }: UbuntuDesktopProps) {
 
       case 'image':
         return (
-          <div className="flex-1 bg-[#1e1e1e] rounded-b-lg flex items-center justify-center p-2 overflow-hidden h-full">
-            <img src={win.data} alt="Viewer" className="max-w-full max-h-full object-contain drop-shadow-lg" />
+          <div className="window-drag-handle flex-1 bg-[#1e1e1e] rounded-b-lg flex items-center justify-center p-2 overflow-hidden h-full cursor-move">
+            <img src={win.data} alt="Viewer" className="max-w-full max-h-full object-contain drop-shadow-lg pointer-events-none" />
           </div>
         );
 

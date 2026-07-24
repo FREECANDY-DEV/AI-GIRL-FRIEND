@@ -716,16 +716,24 @@ export function AnimationLab({
   const handleSaveToProjectFiles = async () => {
     setSaveStatus('saving');
     try {
+      const allPoses = [...POSE_PRESETS, ...customPoses];
+      const uniquePoses = allPoses.filter((p, i, a) => a.findIndex(t => t.id === p.id) === i);
+
       const res = await fetch('/api/save-animations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           clips,
-          poses: customPoses,
+          poses: uniquePoses,
           standingPose,
         }),
       });
       if (res.ok) {
+        localStorage.removeItem('lab_custom_clips_v2');
+        localStorage.removeItem('lab_custom_poses_v2');
+        localStorage.removeItem('lab_standing_pose_v2');
+        localStorage.removeItem('lab_default_base_pose_v1');
+        
         setSaveStatus('saved');
         setTimeout(() => setSaveStatus('idle'), 2500);
         return;

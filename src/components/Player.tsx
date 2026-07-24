@@ -1,4 +1,4 @@
-import { useGLTF, Html } from '@react-three/drei';
+import { useGLTF, Html, useFBX } from '@react-three/drei';
 import { useFrame, useThree, useLoader } from '@react-three/fiber';
 import { useEffect, useRef, useMemo, useState } from 'react';
 import * as THREE from 'three';
@@ -27,6 +27,8 @@ interface PlayerProps {
   hideHeadSpeech?: boolean;
   resetTrigger?: number;
   camHeight?: number;
+  camRadius?: number;
+  camOffsetX?: number;
 }
 
 export function Player({
@@ -42,8 +44,10 @@ export function Player({
   onToggleHistory,
   onZoomChange,
   hideHeadSpeech,
-  resetTrigger,
-  camHeight = 1.65,
+  resetTrigger = 0,
+  camHeight = 1.45,
+  camRadius = 1.6,
+  camOffsetX = 0.4,
 }: PlayerProps) {
   const { camera, scene: globalScene } = useThree();
   const group = useRef<THREE.Group>(null);
@@ -102,6 +106,12 @@ export function Player({
   const headFacingRef = useRef<number | null>(null);
   const isHeadCorrectingRef = useRef(false);
   const hasInitFreeCamRef = useRef(false);
+  const targetOtsRadiusRef = useRef(camRadius);
+
+  // When camRadius prop changes, update the target radius
+  useEffect(() => {
+    targetOtsRadiusRef.current = camRadius;
+  }, [camRadius]);
   const hasInitOtsCamRef = useRef(false);
   const isZoomedCloseRef = useRef(false);
   const turnAnticipationRef = useRef({ isTurning: false, targetAngle: 0 });
@@ -111,6 +121,77 @@ export function Player({
   const blinkTimerRef = useRef(0);
   const isBlinkingRef = useRef(false);
   const blinkProgressRef = useRef(0);
+
+  // FBX Dance Animation State
+  const [isDancing, setIsDancing] = useState(false);
+  const danceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const danceFbx = useFBX(`${import.meta.env.BASE_URL}chicken_dance.fbx`);
+  const mixerRef = useRef<THREE.AnimationMixer | null>(null);
+  const danceActionRef = useRef<THREE.AnimationAction | null>(null);
+
+  useEffect(() => {
+    if (scene && danceFbx.animations.length > 0) {
+      mixerRef.current = new THREE.AnimationMixer(scene);
+      
+      // Clone and retarget the animation clip to match the ReadyPlayerMe skeleton
+      const originalClip = danceFbx.animations[0];
+      const clonedClip = originalClip.clone();
+
+      clonedClip.tracks.forEach((track) => {
+        // Many FBXs have prefixes like 'Armature|mixamorigHips.quaternion' or 'mixamorigHips.quaternion'
+        // We want to extract just the base bone name (e.g., Hips.quaternion)
+        
+        // This regex matches any prefix before a capitalized valid bone name part
+        track.name = track.name.replace(/^.*?(Hips|Spine|Neck|Head|Shoulder|Arm|ForeArm|Hand|UpLeg|Leg|Foot|ToeBase)/i, '$1');
+      });
+
+      console.log('Retargeted dance tracks example:', clonedClip.tracks[0].name);
+
+      const action = mixerRef.current.clipAction(clonedClip);
+      action.loop = THREE.LoopRepeat;
+      danceActionRef.current = action;
+    }
+  }, [scene, danceFbx]);
+
+  useEffect(() => {
+    let shouldDance = false;
+    let isFromLibrary = false;
+
+    // Check if the FBX animation is selected as an active clip from the Animation Library
+    if (activeWalkClip?.id === 'chicken_dance' || activeIdleClip?.id === 'chicken_dance') {
+      shouldDance = true;
+      isFromLibrary = true;
+    }
+
+    if (speechMessage) {
+      const lower = speechMessage.toLowerCase();
+      if (lower.includes('dance') || lower.includes('רקוד') || lower.includes('רוקדת')) {
+        shouldDance = true;
+      }
+    }
+
+    if (shouldDance) {
+      setIsDancing(true);
+      danceActionRef.current?.reset().fadeIn(0.5).play();
+
+      if (danceTimeoutRef.current) {
+        clearTimeout(danceTimeoutRef.current);
+        danceTimeoutRef.current = null;
+      }
+      
+      // If triggered by speech and NOT actively selected in library, stop after 12 seconds
+      if (!isFromLibrary) {
+        danceTimeoutRef.current = setTimeout(() => {
+          setIsDancing(false);
+          danceActionRef.current?.fadeOut(0.5);
+        }, 12000);
+      }
+    } else {
+      setIsDancing(false);
+      danceActionRef.current?.fadeOut(0.5);
+    }
+  }, [speechMessage, activeWalkClip, activeIdleClip]);
 
   useEffect(() => {
     const onBoundary = (e: any) => {
@@ -334,9 +415,14 @@ export function Player({
     if (cameraRight.lengthSq() > 0.001) cameraRight.normalize();
 
     // Movement vector relative to camera perspective
-    const moveVector = new THREE.Vector3()
-      .addScaledVector(cameraDirection, joystickMove.y)
-      .addScaledVector(cameraRight, joystickMove.x);
+    const moveVector = new THREE.Vector3();
+    
+    // Only allow character movement once the camera transition to OTS is fully complete
+    if (isFreeCamera || hasInitOtsCamRef.current) {
+      moveVector
+        .addScaledVector(cameraDirection, joystickMove.y)
+        .addScaledVector(cameraRight, joystickMove.x);
+    }
 
     // ----------------------------------------------------
     // Bracing Anticipation (Raycast for obstacles)
@@ -416,7 +502,19 @@ export function Player({
     if (isMoving) {
       moveVector.normalize();
       const speed = 2.2;
-      const targetBodyAngle = Math.atan2(moveVector.x, moveVector.z);
+      
+      const isWalkingBackwards = joystickMove.y < -0.1 && Math.abs(joystickMove.y) > Math.abs(joystickMove.x) * 0.5;
+      
+      // If walking backwards, face forward but keep moving backwards
+      let facingVector = moveVector.clone();
+      if (isWalkingBackwards) {
+        facingVector = new THREE.Vector3()
+          .addScaledVector(cameraDirection, Math.abs(joystickMove.y))
+          .addScaledVector(cameraRight, joystickMove.x)
+          .normalize();
+      }
+      
+      const targetBodyAngle = Math.atan2(facingVector.x, facingVector.z);
 
       let angleDiff = targetBodyAngle - bodyAngle;
       while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
@@ -514,7 +612,13 @@ export function Player({
       if (activeWalkClip && activeWalkClip.keyframes.length > 0) {
         // Pause the walk cycle animation while doing a sharp staggered turn
         if (!turnAnticipationRef.current.isTurning) {
-          timeRef.current += delta * 0.8;
+          const isWalkingBackwards = joystickMove.y < -0.1 && Math.abs(joystickMove.y) > Math.abs(joystickMove.x) * 0.5;
+          const speedFactor = isWalkingBackwards ? -0.8 : 0.8;
+          timeRef.current += delta * speedFactor;
+          
+          if (timeRef.current < 0) {
+            timeRef.current = (timeRef.current % activeWalkClip.duration) + activeWalkClip.duration;
+          }
         }
         const clipTime = timeRef.current % activeWalkClip.duration;
         const kfs = [...activeWalkClip.keyframes].sort((a, b) => a.time - b.time);
@@ -690,7 +794,7 @@ export function Player({
     let camAngle = bodyAngle;
     let camDiff = 0;
 
-    if (!isFreeCamera && cameraDirection.lengthSq() > 0.001) {
+    if (!isFreeCamera && hasInitOtsCamRef.current && cameraDirection.lengthSq() > 0.001) {
       camAngle = Math.atan2(cameraDirection.x, cameraDirection.z);
       camDiff = camAngle - bodyAngle;
       while (camDiff > Math.PI) camDiff -= Math.PI * 2;
@@ -704,7 +808,7 @@ export function Player({
     }
 
     // Trigger lower body & leg realignment when camera reaches 180° threshold (~170°-180°)
-    if (!isFreeCamera && Math.abs(camDiff) >= Math.PI * 0.92 && !isMoving) {
+    if (!isFreeCamera && hasInitOtsCamRef.current && Math.abs(camDiff) >= Math.PI * 0.92 && !isMoving) {
       isBodyCorrectingRef.current = true;
     }
     if (Math.abs(camDiff) < 0.06) {
@@ -712,7 +816,7 @@ export function Player({
     }
 
     // Smoothly rotate hips & legs towards camera direction when 180° limit is reached
-    if (!isFreeCamera && isBodyCorrectingRef.current && !isMoving) {
+    if (!isFreeCamera && hasInitOtsCamRef.current && isBodyCorrectingRef.current && !isMoving) {
       const targetRotation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), camAngle);
       group.current.quaternion.slerp(targetRotation, 7 * delta);
     }
@@ -891,9 +995,8 @@ export function Player({
       if (!clipBones.has('LeftEye')) setBoneRot(leftEye.current, 0, 0, 0, lerpSpeed);
     }
 
-      // Apply procedural camera look-at tracking ON TOP of any idle/walking animation
-      // Only do this if not in free camera and if we aren't actively correcting the body
-      if (!isFreeCamera && !isBodyCorrectingRef.current && !isMoving && head.current && spine2.current && spine1.current) {
+      // 2. Idle State: Turn head & upper body dynamically towards camera perspective
+      if (!isFreeCamera && hasInitOtsCamRef.current && !isBodyCorrectingRef.current && !isMoving && head.current && spine2.current && spine1.current) {
         // Use slerp to blend the animation's rotation with the target look rotation
         const headTarget = new THREE.Quaternion().setFromEuler(new THREE.Euler(head.current.rotation.x, headYaw, head.current.rotation.z, 'YXZ'));
         head.current.quaternion.slerp(headTarget, 8 * delta);
@@ -1068,6 +1171,10 @@ export function Player({
       }
     }
 
+    if (isDancing && mixerRef.current) {
+      mixerRef.current.update(delta);
+    }
+
     // 3. Over-The-Right-Shoulder (OTS) Camera View & Camera Shake Controller (OrbitControls Compatible)
     const currentPos = rigidBody.current.translation();
     // Use the visually interpolated position of the model group, NOT the raw physics body,
@@ -1098,35 +1205,63 @@ export function Player({
     if (orbitControlsRef.current) {
       orbitControlsRef.current.enableDamping = isFreeCamera;
 
-      if (isFreeCamera && !hasInitFreeCamRef.current) {
-        hasInitOtsCamRef.current = false;
-        // Smoothly position camera directly in front of model face at eye level
-        const targetPos = new THREE.Vector3(0, camHeight, 1.6);
-        const targetLookAt = new THREE.Vector3(0, camHeight, 0);
+      if (isFreeCamera) {
+        hasInitOtsCamRef.current = false; // Reset OTS flag so it guarantees a transition back!
         
-        camera.position.lerp(targetPos, Math.min(1, 1.5 * delta));
-        orbitControlsRef.current.target.lerp(targetLookAt, Math.min(1, 1.5 * delta));
-        
-        if (camera.position.distanceToSquared(targetPos) < 0.05) {
-          hasInitFreeCamRef.current = true;
+        if (!hasInitFreeCamRef.current) {
+          // Smoothly position camera directly in front of model face at eye level
+          const targetPos = new THREE.Vector3(0, camHeight, 1.6);
+          const targetLookAt = new THREE.Vector3(0, camHeight, 0);
+          
+          camera.position.lerp(targetPos, Math.min(1, 1.5 * delta));
+          orbitControlsRef.current.target.lerp(targetLookAt, Math.min(1, 1.5 * delta));
+          
+          if (camera.position.distanceToSquared(targetPos) < 0.05) {
+            hasInitFreeCamRef.current = true;
+          }
         }
         orbitControlsRef.current.update();
       } else if (!isFreeCamera) {
-        hasInitFreeCamRef.current = false;
+        // If we just toggled from Free Camera, capture the current distance!
+        if (hasInitFreeCamRef.current) {
+          hasInitFreeCamRef.current = false;
+          targetOtsRadiusRef.current = camera.position.distanceTo(orbitControlsRef.current.target);
+        }
 
         if (!hasInitOtsCamRef.current) {
           // Smoothly move camera behind the character when toggling to OTS
           const charYaw = group.current?.rotation.y || 0;
-          const radius = 2.5;
+          const radius = targetOtsRadiusRef.current;
           const camX = playerWorldPos.x + Math.sin(charYaw + Math.PI) * radius;
           const camZ = playerWorldPos.z + Math.cos(charYaw + Math.PI) * radius;
           const targetCamPos = new THREE.Vector3(camX, playerWorldPos.y + camHeight, camZ);
           
-          camera.position.lerp(targetCamPos, Math.min(1, 1.5 * delta));
+          // Slower and smoother transition
+          const transitionSpeed = 1.5;
+          const alpha = Math.min(1, transitionSpeed * delta);
           
-          // Complete the transition if we are close enough, OR if the player starts moving!
-          // This prevents an eternal lag bug where the transition never finishes because the target is running away.
-          if (camera.position.distanceToSquared(targetCamPos) < 0.05 || isMoving) {
+          // Use Spherical Interpolation to make it sweep in a sideways circle around the player
+          const pivot = new THREE.Vector3(playerWorldPos.x, playerWorldPos.y + camHeight, playerWorldPos.z);
+          const currentOffset = camera.position.clone().sub(pivot);
+          const targetOffset = targetCamPos.clone().sub(pivot);
+          
+          const currentSpherical = new THREE.Spherical().setFromVector3(currentOffset);
+          const targetSpherical = new THREE.Spherical().setFromVector3(targetOffset);
+          
+          // Ensure it takes the shortest rotational path
+          let thetaDiff = targetSpherical.theta - currentSpherical.theta;
+          while (thetaDiff > Math.PI) thetaDiff -= Math.PI * 2;
+          while (thetaDiff < -Math.PI) thetaDiff += Math.PI * 2;
+          
+          currentSpherical.theta += thetaDiff * alpha;
+          currentSpherical.phi = THREE.MathUtils.lerp(currentSpherical.phi, targetSpherical.phi, alpha);
+          currentSpherical.radius = THREE.MathUtils.lerp(currentSpherical.radius, targetSpherical.radius, alpha);
+          
+          const newOffset = new THREE.Vector3().setFromSpherical(currentSpherical);
+          camera.position.copy(pivot.clone().add(newOffset));
+          
+          // Complete the transition once the camera is very close to the target position
+          if (camera.position.distanceToSquared(targetCamPos) < 0.05) {
             hasInitOtsCamRef.current = true;
           }
         }
@@ -1140,10 +1275,11 @@ export function Player({
         const lookAtTarget = playerWorldPos
           .clone()
           .add(new THREE.Vector3(0, camHeight + shakeY, 0))
-          .add(camRight.multiplyScalar(0.4 + shakeX));
+          .add(camRight.multiplyScalar(camOffsetX + shakeX));
 
         if (!hasInitOtsCamRef.current) {
-          orbitControlsRef.current.target.lerp(lookAtTarget, Math.min(1, 1.5 * delta));
+          const transitionSpeed = 1.5;
+          orbitControlsRef.current.target.lerp(lookAtTarget, Math.min(1, transitionSpeed * delta));
         } else {
           // If the target moves without the camera moving, OrbitControls will think the user zoomed out.
           // To perfectly lock the camera distance, we must move the camera by the exact same delta as the target!
@@ -1159,8 +1295,13 @@ export function Player({
           const target = orbitControlsRef.current.target;
           const offset = camera.position.clone().sub(target);
           const currentAzimuth = Math.atan2(offset.x, offset.z);
-          
-          const moveAzimuth = Math.atan2(moveVector.x, moveVector.z);
+          const isWalkingBackwards = joystickMove.y < -0.1 && Math.abs(joystickMove.y) > Math.abs(joystickMove.x) * 0.5;
+          let camFollowVector = moveVector.clone();
+          if (isWalkingBackwards) {
+            camFollowVector.negate();
+          }
+
+          const moveAzimuth = Math.atan2(camFollowVector.x, camFollowVector.z);
           let targetAzimuth = moveAzimuth + Math.PI; // Camera should be behind the movement direction
           
           let deltaAzimuth = targetAzimuth - currentAzimuth;
