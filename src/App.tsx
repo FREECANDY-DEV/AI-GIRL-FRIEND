@@ -18,6 +18,7 @@ import { Laptop } from './components/Laptop';
 import { BackgroundMusic } from './components/BackgroundMusic';
 import { DonationWidget } from './components/DonationWidget';
 import { UbuntuDesktop } from './components/UbuntuDesktop';
+import { TutorialOverlay } from './components/TutorialOverlay';
 import { CharacterProfile } from './components/CharacterProfile';
 import { MatrixCube } from './components/MatrixCube';
 import { ButterflyParticles } from './components/ButterflyParticles';
@@ -26,7 +27,7 @@ import { SceneSettingsPanel } from './components/SceneSettingsPanel';
 import { StandingPoseConfig, AnimationClip, PosePreset } from './types/animation';
 import { SceneConfig, DEFAULT_SCENE_CONFIG } from './types/scene';
 import { DEFAULT_STANDING_POSE, DEFAULT_CLIPS, POSE_PRESETS } from './data/defaultAnimations';
-import { Sparkles, Layers, Gamepad2, Sliders, Move, X, MessageSquare, Send, Volume2, VolumeX, Loader2, Eye, History, Save, ArrowUp, ArrowDown, Check, RotateCcw, Menu } from 'lucide-react';
+import { Sparkles, Layers, Gamepad2, Sliders, Move, X, MessageSquare, Send, Volume2, VolumeX, Loader2, Eye, History, Save, ArrowUp, ArrowDown, Check, RotateCcw, Menu, Terminal } from 'lucide-react';
 import { generateGLMResponse, speakFemaleTTS } from './utils/aiCompanion';
 
 export default function App() {
@@ -45,6 +46,11 @@ export default function App() {
 
   // Player Camera state, initialized from sceneConfig
   const [camHeight, setCamHeight] = useState<number>(DEFAULT_SCENE_CONFIG.cameraPositionY || 1.45);
+  const [activeTutorial, setActiveTutorial] = useState<string | null>(null);
+  
+  // Slash Commands State
+  const [showCommandMenu, setShowCommandMenu] = useState(false);
+
   const [saveToast, setSaveToast] = useState<string | null>(null);
 
   // Dynamic Touch Screen Detection (Joystick appears only when touching screen)
@@ -429,10 +435,33 @@ export default function App() {
 
     const userText = aiChatInput.trim();
     setAiChatInput('');
-    setIsAiThinking(true);
+    setShowCommandMenu(false);
 
     const nowTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const userMsgId = Date.now().toString();
+
+    // Handle hardcoded Slash Commands
+    if (userText.toLowerCase() === '/help') {
+      setChatHistory((prev) => [...prev, { id: userMsgId, sender: 'user', text: userText, time: nowTime }]);
+      setIsHistoryOpen(true);
+      const helpResponse = `**Ava's Capabilities & Examples:**\n\n` +
+        `• **Animations & Poses:** I can trigger 3D physical actions!\n` +
+        `  *Example: "Can you do the chicken dance?"*\n\n` +
+        `• **System Control:** I can show you how to use your laptop.\n` +
+        `  *Example: "How do I check directories using the terminal?"*\n\n` +
+        `• **Multi-lingual Support:** I speak English, Hebrew, Spanish, French, German, Russian, Arabic, Japanese, and Chinese!\n` +
+        `  *Example: "דברי איתי בעברית"*`;
+        
+      setChatHistory((prev) => [
+        ...prev,
+        { id: (Date.now() + 1).toString(), sender: 'ava', text: helpResponse, time: nowTime },
+      ]);
+      setSpeechMessage("I've expanded the chat history to show you my full capabilities and examples!");
+      if (isTtsEnabled) speakFemaleTTS("Here are my capabilities and examples.");
+      return;
+    }
+
+    setIsAiThinking(true);
 
     setChatHistory((prev) => [...prev, { id: userMsgId, sender: 'user', text: userText, time: nowTime }]);
 
@@ -446,6 +475,15 @@ export default function App() {
       window.dispatchEvent(new CustomEvent('avaAction', { detail: actionName }));
       // Remove tag from reply so user doesn't see it
       reply = reply.replace(actionMatch[0], '').trim();
+    }
+    
+    // Check for [TUTORIAL: ...] tag
+    const tutorialMatch = reply.match(/\[TUTORIAL:\s*(.*?)\]/i);
+    if (tutorialMatch) {
+      const commandName = tutorialMatch[1];
+      setActiveTutorial(commandName);
+      // Remove tag from reply so user doesn't see it
+      reply = reply.replace(tutorialMatch[0], '').trim();
     }
 
     setSpeechMessage(reply);
@@ -921,6 +959,29 @@ export default function App() {
         )}
 
         {/* AI Companion Floating Chat Input Bar (Z.AI GLM-4-Flash + Female Voice) */}
+        
+        {/* Slash Command Popup Menu */}
+        {showCommandMenu && (
+          <div className="absolute bottom-16 sm:bottom-20 right-4 sm:right-6 md:right-1/2 md:translate-x-1/2 z-30 bg-slate-900 border border-slate-700 p-1.5 rounded-xl shadow-2xl w-64 animate-in fade-in slide-in-from-bottom-2 duration-200">
+            <div className="px-2 py-1.5 text-xs font-bold text-slate-400 border-b border-slate-800 mb-1">
+              Available Commands
+            </div>
+            <button
+              onClick={() => {
+                setAiChatInput('/help');
+                setShowCommandMenu(false);
+              }}
+              className="w-full text-left px-2 py-2 rounded-lg hover:bg-blue-600/20 text-blue-400 transition flex flex-col gap-1"
+            >
+              <div className="font-bold flex items-center gap-1.5">
+                <Terminal size={12} />
+                <span>/help</span>
+              </div>
+              <span className="text-slate-400 text-[10px]">View Ava's capabilities and examples</span>
+            </button>
+          </div>
+        )}
+
         <form
           onSubmit={handleSendAiMessage}
           className="absolute bottom-4 sm:bottom-6 right-4 sm:right-6 md:right-1/2 md:translate-x-1/2 z-20 pointer-events-auto flex items-center gap-1.5 bg-slate-900/95 border border-slate-800 p-1.5 rounded-2xl shadow-2xl backdrop-blur-xl w-[calc(100vw-7rem)] max-w-md sm:max-w-lg"
@@ -941,8 +1002,12 @@ export default function App() {
           <input
             type="text"
             value={aiChatInput}
-            onChange={(e) => setAiChatInput(e.target.value)}
-            placeholder="Talk to Ava (AI Companion)..."
+            onChange={(e) => {
+              const val = e.target.value;
+              setAiChatInput(val);
+              setShowCommandMenu(val.startsWith('/'));
+            }}
+            placeholder="Talk to Ava (AI Companion)... type '/' for commands"
             className="flex-1 bg-transparent text-slate-100 placeholder-slate-400 text-xs sm:text-sm px-2 focus:outline-none font-medium"
           />
 
