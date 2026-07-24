@@ -20,6 +20,7 @@ import { DonationWidget } from './components/DonationWidget';
 import { UbuntuDesktop } from './components/UbuntuDesktop';
 import { CharacterProfile } from './components/CharacterProfile';
 import { MatrixCube } from './components/MatrixCube';
+import { ButterflyParticles } from './components/ButterflyParticles';
 import { Wand2 } from 'lucide-react';
 import { SceneSettingsPanel } from './components/SceneSettingsPanel';
 import { StandingPoseConfig, AnimationClip, PosePreset } from './types/animation';
@@ -691,6 +692,8 @@ export default function App() {
               <RigidBody type="fixed">
                 <MatrixCube position={[3, 0.5, 3]} />
               </RigidBody>
+              
+              <ButterflyParticles />
 
               {/* Laptop placed to fall dynamically onto the cube */}
               <Laptop position={[3, 3.0, 3]} rotation={[0, -Math.PI / 2, 0]} onOpenDesktop={() => setIsDesktopOpen(true)} />

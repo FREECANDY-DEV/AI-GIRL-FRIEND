@@ -49,13 +49,17 @@ export function DonationWidget() {
         </div>
       )}
 
-      {/* Floating Button */}
+      {/* Floating Button - Classic Minimalistic USDT Logo */}
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="w-12 h-12 bg-slate-900/80 backdrop-blur-md border border-slate-700/50 rounded-full shadow-2xl flex items-center justify-center hover:bg-slate-800 transition-all hover:scale-105 group hover:border-[#26A17B]/50 hover:shadow-[0_0_15px_rgba(38,161,123,0.3)]"
+        className={`w-12 h-12 rounded-full shadow-2xl flex items-center justify-center transition-all hover:scale-105 group ${
+          isOpen ? 'bg-slate-800 border border-[#50AF95]/50' : 'bg-[#50AF95] border-2 border-transparent hover:border-white/20'
+        }`}
         title="Donate USDT"
       >
-        <span className={`text-2xl font-bold transition-colors ${isOpen ? 'text-[#26A17B]' : 'text-slate-300 group-hover:text-[#26A17B]'}`}>
+        <span className={`text-2xl font-bold transition-colors ${
+          isOpen ? 'text-[#50AF95]' : 'text-white'
+        }`}>
           ₮
         </span>
       </button>
